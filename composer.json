@@ -1,6 +1,12 @@
 {
     "name": "munkie/karzer",
     "description": "Multi threaded isolated PHPUnit tests runner",
+    "type": "library",
+    "keywords": [
+        "phpunit",
+        "xunit",
+        "testing"
+    ],
     "authors": [
         {
             "name": "Mikhail Shamin",
@@ -14,5 +20,8 @@
         "psr-0": {
             "Karzer\\": "src/"
         }
-    }
+    },
+    "bin": [
+        "composer/bin/karzer"
+    ]
 }
