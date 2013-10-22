@@ -16,7 +16,7 @@ class JobPool implements IteratorAggregate, Countable
     protected $max;
 
     /**
-     * @var SplObjectStorage
+     * @var SplObjectStorage|Job[]
      */
     protected $jobs;
 
@@ -81,10 +81,13 @@ class JobPool implements IteratorAggregate, Countable
      */
     public function remove(Job $job)
     {
-        $this->positions[$job->getPoolNumber()]
+        $this->removePoolNumber($job);
         $this->jobs->detach($job);
     }
 
+    /**
+     * @return int
+     */
     public function getMax()
     {
         return $this->max;
@@ -95,7 +98,7 @@ class JobPool implements IteratorAggregate, Countable
      */
     public function isFull()
     {
-        return $this->jobs->count() == $this->max;
+        return $this->count() == $this->max;
     }
 
     /**
@@ -104,9 +107,9 @@ class JobPool implements IteratorAggregate, Countable
     public function getStreams()
     {
         $streams = array();
-        foreach ($this as $job) {
-            $streams[] = $job->getStdout();
-            $streams[] = $job->getStderr();
+        foreach ($this->jobs as $job) {
+            $streams[] = $job->getStdout()->getStream();
+            $streams[] = $job->getStderr()->getStream();
         }
         return $streams;
     }
@@ -120,7 +123,7 @@ class JobPool implements IteratorAggregate, Countable
     }
 
     /**
-     * @return int|void
+     * @return int
      */
     public function count()
     {
