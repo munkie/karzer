@@ -47,9 +47,9 @@ abstract class TestCase extends PHPUnit_Framework_TestCase
     public function unsetTestResultObject()
     {
         // Dirty hack to unset private property
-        $reflection = new \ReflectionProperty($this, 'result');
-        $reflection->setAccessible(true);
-        $reflection->setValue($this, null);
+        $property = new \ReflectionProperty('PHPUnit_Framework_TestCase', 'result');
+        $property->setAccessible(true);
+        $property->setValue($this, null);
     }
 
     /**
@@ -57,10 +57,10 @@ abstract class TestCase extends PHPUnit_Framework_TestCase
      */
     public function useErrorHandler()
     {
-        // Dirty hack to unset private property
-        $reflection = new \ReflectionProperty($this, 'useErrorHandler');
-        $reflection->setAccessible(true);
-        $value = $reflection->getValue($this);
+        // XXX Dirty hack to get useErrorHandler property value
+        $property = new \ReflectionProperty('PHPUnit_Framework_TestCase', 'useErrorHandler');
+        $property->setAccessible(true);
+        $value = $property->getValue($this);
         return null !== $value;
     }
 }

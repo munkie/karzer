@@ -6,14 +6,14 @@
          convertErrorsToExceptions="true"
          convertNoticesToExceptions="true"
          convertWarningsToExceptions="true"
-         processIsolation="false"
+         processIsolation="true"
          stopOnFailure="false"
          syntaxCheck="false"
          bootstrap="vendor/autoload.php"
         >
     <testsuites>
         <testsuite name="Karzer">
-            <directory>./src/Tests/</directory>
+            <directory>./src/Karzer/Tests</directory>
         </testsuite>
     </testsuites>
 
@@ -22,7 +22,7 @@
             <directory>./</directory>
             <exclude>
                 <directory>./vendor</directory>
-                <directory>./Tests</directory>
+                <directory>./src/Karzer/Tests</directory>
             </exclude>
         </whitelist>
     </filter>

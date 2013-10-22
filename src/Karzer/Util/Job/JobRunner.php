@@ -87,11 +87,16 @@ class JobRunner extends PHPUnit_Util_PHP_Default
     }
 
     /**
+     * @param Job $job
      * @return Job[]|bool
      * @throws \Karzer\Framework\Exception
      */
-    public function getNext()
+    public function getNext(Job $job = null)
     {
+        if ($job) {
+            $this->startJob($job);
+        }
+
         if ($this->pool->isEmpty()) {
             return false;
         }

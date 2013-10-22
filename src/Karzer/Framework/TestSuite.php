@@ -13,7 +13,7 @@ class TestSuite extends PHPUnit_Framework_TestSuite
     /**
      * @var JobRunner
      */
-    protected $parallel;
+    protected $runner;
 
     /**
      * @param PHPUnit_Framework_TestSuite $testSuite
@@ -24,7 +24,7 @@ class TestSuite extends PHPUnit_Framework_TestSuite
             $this->addTest($test);
         }
 
-        $this->parallel = new JobRunner();
+        $this->runner = new JobRunner();
     }
 
     /**
@@ -52,8 +52,9 @@ class TestSuite extends PHPUnit_Framework_TestSuite
     public function runTest(PHPUnit_Framework_Test $test, PHPUnit_Framework_TestResult $result)
     {
         if ($test instanceof TestCase) {
-            $this->parallel->addJob($test->createJob($result));
+            $job = $test->createJob($result);
+            $this->runner->getNext($job);
         }
-        $this->parallel->getNext();
+
     }
 }
