@@ -2,10 +2,11 @@
 
 namespace Karzer\Util\Job;
 
-use Karzer\Framework\TestCase;
+use Karzer\Framework\JobTestInterface;
 use Text_Template;
 use PHPUnit_Framework_Test;
 use PHPUnit_Framework_TestResult;
+use ReflectionProperty;
 
 class Job
 {
@@ -15,7 +16,7 @@ class Job
     protected $template;
 
     /**
-     * @var TestCase
+     * @var JobTestInterface
      */
     protected $test;
 
@@ -51,12 +52,12 @@ class Job
 
     /**
      * @param Text_Template $template
-     * @param TestCase $test
+     * @param JobTestInterface $test
      * @param PHPUnit_Framework_TestResult $result
      */
     public function __construct(
         Text_Template $template,
-        TestCase $test,
+        JobTestInterface $test,
         PHPUnit_Framework_TestResult $result
     ) {
         $this->template = $template;
@@ -81,7 +82,7 @@ class Job
     }
 
     /**
-     * @return \PHPUnit_Framework_Test
+     * @return JobTestInterface
      */
     public function getTest()
     {
@@ -102,7 +103,7 @@ class Job
      */
     protected function modifyTemplate()
     {
-        $property = new \ReflectionProperty($this->template, 'template');
+        $property = new ReflectionProperty($this->template, 'template');
         $property->setAccessible(true);
         $template = $property->getValue($this->template);
 

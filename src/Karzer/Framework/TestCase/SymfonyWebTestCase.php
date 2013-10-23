@@ -1,14 +1,17 @@
 <?php
 
-namespace Karzer\Framework;
+namespace Karzer\Framework\TestCase;
 
+use Karzer\Framework\JobTestInterface;
+use Karzer\Framework\TextTemplateYield;
+use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Karzer\Util\Job\Job;
 use PHPUnit_Framework_TestResult;
 use PHPUnit_Framework_TestCase;
 use Text_Template;
 use ReflectionProperty;
 
-abstract class TestCase extends PHPUnit_Framework_TestCase implements JobTestInterface
+abstract class SymfonyWebTestCase extends WebTestCase implements JobTestInterface
 {
     /**
      * @var int

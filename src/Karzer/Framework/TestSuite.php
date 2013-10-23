@@ -51,7 +51,7 @@ class TestSuite extends PHPUnit_Framework_TestSuite
      */
     public function runTest(PHPUnit_Framework_Test $test, PHPUnit_Framework_TestResult $result)
     {
-        if ($test instanceof TestCase && $test->runTestInSeparateProcess()) {
+        if ($test instanceof JobTestInterface && $test->runTestInSeparateProcess()) {
             $job = $test->createJob($result);
             $this->runner->run($job);
         } else {
