@@ -1,6 +1,6 @@
 <?php
 
-namespace Karzer\Util\Job;
+namespace Karzer\Util;
 
 use Karzer\Framework\Exception;
 
@@ -28,13 +28,15 @@ class Stream
      * @param resource $stream
      * @throws \Karzer\Framework\Exception
      */
-    public function __construct($stream)
+    public function __construct($stream, $mode = self::BLOCKING_MODE)
     {
         if (!is_resource($stream)) {
             throw new Exception('Stream is not a resource');
         }
 
         $this->stream = $stream;
+
+        $this->setBlocking($mode);
     }
 
     /**
@@ -65,9 +67,10 @@ class Stream
     /**
      * @return bool
      */
-    public function read()
+    public function read($length = null)
     {
-        $read = fread($this->stream, $this->readLength);
+        $length = ($length) ?: $this->readLength;
+        $read = fread($this->stream, $length);
         if (feof($this->stream)) {
             $this->close();
         }

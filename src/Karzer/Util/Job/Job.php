@@ -7,6 +7,7 @@ use Text_Template;
 use PHPUnit_Framework_Test;
 use PHPUnit_Framework_TestResult;
 use ReflectionProperty;
+use Karzer\Util\Stream;
 
 class Job
 {

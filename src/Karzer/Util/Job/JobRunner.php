@@ -3,6 +3,7 @@
 namespace Karzer\Util\Job;
 
 use Karzer\Framework\Exception;
+use Karzer\Util\Stream;
 use PHPUnit_Util_PHP_Default;
 use PHPUnit_Framework_Exception;
 
@@ -57,11 +58,8 @@ class JobRunner extends PHPUnit_Util_PHP_Default
         $this->process($pipes[0], $job->render());
         fclose($pipes[0]);
 
-        $stdout = new Stream($pipes[1]);
-        $stdout->setBlocking(Stream::NON_BLOCKING_MODE);
-
-        $stderr = new Stream($pipes[2]);
-        $stderr->setBlocking(Stream::NON_BLOCKING_MODE);
+        $stdout = new Stream($pipes[1], Stream::NON_BLOCKING_MODE);
+        $stderr = new Stream($pipes[2], Stream::NON_BLOCKING_MODE);
 
         $job->setStdout($stdout);
         $job->setStderr($stderr);
