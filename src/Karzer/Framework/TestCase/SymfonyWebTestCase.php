@@ -3,10 +3,16 @@
 namespace Karzer\Framework\TestCase;
 
 use Karzer\Framework\TextTemplateYield;
+use PHPUnit_Extensions_PhptTestCase;
+use PHPUnit_Extensions_SeleniumTestCase;
+use PHPUnit_Framework_Exception;
+use PHPUnit_Framework_Warning;
+use PHPUnit_Util_GlobalState;
+use PHPUnit_Util_PHP;
+use ReflectionClass;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Karzer\Util\Job\Job;
 use PHPUnit_Framework_TestResult;
-use PHPUnit_Framework_TestCase;
 use Text_Template;
 use ReflectionProperty;
 
@@ -103,10 +109,28 @@ abstract class SymfonyWebTestCase extends WebTestCase implements JobTestInterfac
     protected static function getPhpUnitXmlDir()
     {
         $oldScript = $_SERVER['argv'][0];
-        // just to make shure parent check will proceed
+        // just to make sure parent check will proceed
         $_SERVER['argv'][0] = '/bin/phpunit';
         $dir = parent::getPhpUnitXmlDir();
         $_SERVER['argv'][0] = $oldScript;
         return $dir;
+    }
+
+    protected static function loadKernelClass()
+    {
+        if (null === static::$class) {
+            static::$class = static::getKernelClass();
+        }
+    }
+
+    /**
+     * @param PHPUnit_Framework_TestResult $result
+     * @return PHPUnit_Framework_TestResult
+     */
+    public function run(PHPUnit_Framework_TestResult $result = null)
+    {
+        // include kernel to be sure that serialized result containing it will be successfully unserialized
+        static::loadKernelClass();
+        return parent::run($result);
     }
 }
