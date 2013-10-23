@@ -2,12 +2,14 @@
 
 namespace Karzer\Framework\TestCase;
 
+use Karzer\Framework\SerializableException;
 use Karzer\Framework\TextTemplateYield;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Karzer\Util\Job\Job;
 use PHPUnit_Framework_TestResult;
 use Text_Template;
 use ReflectionProperty;
+use Exception;
 
 abstract class SymfonyWebTestCase extends WebTestCase implements JobTestInterface
 {
