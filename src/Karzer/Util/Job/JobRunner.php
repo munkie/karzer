@@ -102,6 +102,9 @@ class JobRunner extends PHPUnit_Util_PHP_Default
     {
         if ($job) {
             $this->startJob($job);
+            if (!$this->pool->isFull()) {
+                return array();
+            }
         }
 
         if ($this->pool->isEmpty()) {
