@@ -12,7 +12,7 @@ class Stream
     /**
      * @var resource
      */
-    protected $stream;
+    protected $resource;
 
     /**
      * @var string
@@ -34,7 +34,7 @@ class Stream
             throw new Exception('Stream is not a resource');
         }
 
-        $this->stream = $stream;
+        $this->resource = $stream;
 
         $this->setBlocking($mode);
     }
@@ -44,15 +44,15 @@ class Stream
      */
     public function setBlocking($mode = self::NON_BLOCKING_MODE)
     {
-        stream_set_blocking($this->stream, $mode);
+        stream_set_blocking($this->resource, $mode);
     }
 
     /**
      * @return resource
      */
-    public function getStream()
+    public function getResource()
     {
-        return $this->stream;
+        return $this->resource;
     }
 
     /**
@@ -61,17 +61,18 @@ class Stream
      */
     public function isEqualTo($stream)
     {
-        return $this->stream === $stream;
+        return $this->resource === $stream;
     }
 
     /**
+     * @param int $length
      * @return bool
      */
     public function read($length = null)
     {
         $length = ($length) ?: $this->readLength;
-        $read = fread($this->stream, $length);
-        if (feof($this->stream)) {
+        $read = fread($this->resource, $length);
+        if (feof($this->resource)) {
             $this->close();
         }
         if (false === $read) {
@@ -84,8 +85,8 @@ class Stream
 
     public function close()
     {
-        fclose($this->stream);
-        $this->stream = null;
+        fclose($this->resource);
+        $this->resource = null;
     }
 
     /**
@@ -101,6 +102,14 @@ class Stream
      */
     public function isOpen()
     {
-        return $this->stream !== null;
+        return $this->resource !== null;
+    }
+
+    /**
+     * @return array
+     */
+    public function getMeta()
+    {
+        return stream_get_meta_data($this->resource);
     }
 }

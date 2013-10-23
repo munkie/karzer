@@ -108,8 +108,8 @@ class JobPool implements IteratorAggregate, Countable
     {
         $streams = array();
         foreach ($this->jobs as $job) {
-            $streams[] = $job->getStdout()->getStream();
-            $streams[] = $job->getStderr()->getStream();
+            $streams[] = $job->getStdout()->getResource();
+            $streams[] = $job->getStderr()->getResource();
         }
         return $streams;
     }

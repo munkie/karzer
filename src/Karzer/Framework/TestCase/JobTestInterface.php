@@ -3,8 +3,9 @@ namespace Karzer\Framework\TestCase;
 
 use Karzer\Util\Job\Job;
 use PHPUnit_Framework_TestResult;
+use PHPUnit_Framework_Test;
 
-interface JobTestInterface
+interface JobTestInterface extends PHPUnit_Framework_Test
 {
     /**
      * @param PHPUnit_Framework_TestResult $result
