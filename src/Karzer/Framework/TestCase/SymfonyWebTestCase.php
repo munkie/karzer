@@ -6,7 +6,6 @@ use Karzer\Framework\TextTemplateYield;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Karzer\Util\Job\Job;
 use PHPUnit_Framework_TestResult;
-use Symfony\Component\HttpKernel\KernelInterface;
 use Text_Template;
 use ReflectionProperty;
 
@@ -23,18 +22,14 @@ abstract class SymfonyWebTestCase extends WebTestCase implements JobTestInterfac
     protected $yieldTemplate = false;
 
     /**
-     * @var int
-     */
-    protected static $staticPoolPosition;
-
-    /**
      * @param int $poolPosition
      */
     public function setPoolPosition($poolPosition)
     {
         if (null === $this->poolPosition) {
             $this->poolPosition = $poolPosition;
-            static::$staticPoolPosition = $poolPosition;
+            $_SERVER['SYMFONY__KERNEL__POOL_POSITION'] = $poolPosition;
+            $_SERVER['SYMFONY__KERNEL__POOL_POSITION_NAME'] = "_$poolPosition";
         }
     }
 
@@ -144,29 +139,5 @@ abstract class SymfonyWebTestCase extends WebTestCase implements JobTestInterfac
         // include kernel to be sure that serialized result containing it will be successfully unserialized
         static::loadKernelClass();
         return parent::run($result);
-    }
-
-    /**
-     * @param array $options
-     * @return KernelInterface
-     */
-    protected static function createKernel(array $options = array())
-    {
-        $kernel = parent::createKernel($options);
-        if (null !== static::$staticPoolPosition) {
-            $kernel->boot();
-            static::modifyKernel($kernel, static::$staticPoolPosition);
-        }
-        return $kernel;
-    }
-
-    /**
-     * Override this method to modify kernel or container in isolation
-     *
-     * @param KernelInterface $kernel
-     * @param int $poolPosition
-     */
-    protected static function modifyKernel(KernelInterface $kernel, $poolPosition)
-    {
     }
 }
