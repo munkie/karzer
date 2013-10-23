@@ -52,6 +52,11 @@ class Job
     protected $stdout;
 
     /**
+     * @var string
+     */
+    protected $render;
+
+    /**
      * @param Text_Template $template
      * @param JobTestInterface $test
      * @param PHPUnit_Framework_TestResult $result
@@ -95,8 +100,11 @@ class Job
      */
     public function render()
     {
-        $this->modifyTemplate();
-        return $this->template->render();
+        if (null === $this->render) {
+            $this->modifyTemplate();
+            $this->render = $this->template->render();
+        }
+        return $this->render;
     }
 
     /**
