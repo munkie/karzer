@@ -10,5 +10,37 @@ class SampleTest extends TestCase
     {
         $this->assertTrue(true);
     }
+
+    /**
+     * @param $data
+     * @dataProvider dataProvider
+     */
+    public function testDataProvider($data)
+    {
+        $this->assertTrue($data);
+    }
+
+    /**
+     * @return array
+     */
+    public function dataProvider()
+    {
+        return array(
+            array(true),
+            array(false),
+            array(null),
+            array(new \stdClass()),
+            array(array()),
+            array("string"),
+            array(1),
+            array(8.78),
+            array("")
+        );
+    }
+
+    public function testException()
+    {
+        throw new \Exception("I'm exception, bitch!");
+    }
 }
  
