@@ -2,7 +2,6 @@
 
 namespace Karzer\Framework\TestCase;
 
-use Karzer\Framework\JobTestInterface;
 use Karzer\Framework\TextTemplateYield;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Karzer\Util\Job\Job;
@@ -96,5 +95,18 @@ abstract class SymfonyWebTestCase extends WebTestCase implements JobTestInterfac
         $property->setAccessible(true);
         $value = $property->getValue($this);
         return null !== $value;
+    }
+
+    /**
+     * @return string
+     */
+    protected static function getPhpUnitXmlDir()
+    {
+        $oldScript = $_SERVER['argv'][0];
+        // just to make shure parent check will proceed
+        $_SERVER['argv'][0] = '/bin/phpunit';
+        $dir = parent::getPhpUnitXmlDir();
+        $_SERVER['argv'][0] = $oldScript;
+        return $dir;
     }
 }

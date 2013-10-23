@@ -43,8 +43,24 @@ class Command extends PHPUnit_TextUI_Command
     protected function handleArguments(array $argv)
     {
         parent::handleArguments($argv);
+
+        $this->arguments['test'] = $this->createTestSuite();
+    }
+
+    /**
+     * @return TestSuite
+     */
+    protected function createTestSuite()
+    {
         if (isset($this->arguments['test']) && $this->arguments['test'] instanceof PHPUnit_Framework_TestSuite) {
-            $this->arguments['test'] = new TestSuite($this->arguments['test'], $this->arguments['threads']);
+            $suite = $this->arguments['test'];
+        } else {
+            $suite = $this->createRunner()->getTest(
+                $this->arguments['test'],
+                $this->arguments['testFile'],
+                $this->arguments['testSuffixes']
+            );
         }
+        return new TestSuite($suite, $this->arguments['threads']);
     }
 }

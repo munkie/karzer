@@ -2,6 +2,7 @@
 
 namespace Karzer\Framework;
 
+use Karzer\Framework\TestCase\JobTestInterface;
 use Karzer\Util\Job\JobRunner;
 use PHPUnit_Framework_Test;
 use PHPUnit_Framework_TestSuite;
@@ -15,10 +16,10 @@ class TestSuite extends PHPUnit_Framework_TestSuite
     protected $runner;
 
     /**
-     * @param PHPUnit_Framework_TestSuite $testSuite
+     * @param PHPUnit_Framework_Test $testSuite
      * @param int $threads
      */
-    public function __construct(PHPUnit_Framework_TestSuite $testSuite, $threads)
+    public function __construct(PHPUnit_Framework_Test $testSuite, $threads)
     {
         foreach ($this->getSuiteTests($testSuite) as $test) {
             $this->addTest($test);
@@ -28,19 +29,23 @@ class TestSuite extends PHPUnit_Framework_TestSuite
     }
 
     /**
-     * @param PHPUnit_Framework_TestSuite $testSuite
+     * @param PHPUnit_Framework_Test $testSuite
      * @return PHPUnit_Framework_Test[]
      */
-    protected function getSuiteTests(PHPUnit_Framework_TestSuite $testSuite)
+    protected function getSuiteTests(PHPUnit_Framework_Test $testSuite)
     {
         $tests = array();
-        foreach ($testSuite->tests() as $test) {
-            if ($test instanceof PHPUnit_Framework_TestSuite) {
-                $suiteTests = $this->getSuiteTests($test);
-                $tests = array_merge($tests, $suiteTests);
-            } else {
-                $tests[] = $test;
+        if ($testSuite instanceof PHPUnit_Framework_TestSuite) {
+            foreach ($testSuite->tests() as $test) {
+                if ($test instanceof PHPUnit_Framework_TestSuite) {
+                    $suiteTests = $this->getSuiteTests($test);
+                    $tests = array_merge($tests, $suiteTests);
+                } else {
+                    $tests[] = $test;
+                }
             }
+        } else {
+            $tests[] = $testSuite;
         }
         return $tests;
     }

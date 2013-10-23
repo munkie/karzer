@@ -1,5 +1,5 @@
 <?php
-namespace Karzer\Framework;
+namespace Karzer\Framework\TestCase;
 
 use Karzer\Util\Job\Job;
 use PHPUnit_Framework_TestResult;

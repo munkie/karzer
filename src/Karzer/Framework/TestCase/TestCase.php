@@ -2,7 +2,6 @@
 
 namespace Karzer\Framework\TestCase;
 
-use Karzer\Framework\JobTestInterface;
 use Karzer\Framework\TextTemplateYield;
 use Karzer\Util\Job\Job;
 use PHPUnit_Framework_TestResult;
