@@ -3,6 +3,7 @@
 namespace Karzer\Util\Job;
 
 use Karzer\Framework\Exception;
+use Karzer\Util\Stream;
 use SplObjectStorage;
 use IteratorAggregate;
 use Traversable;
@@ -108,8 +109,12 @@ class JobPool implements IteratorAggregate, Countable
     {
         $streams = array();
         foreach ($this->jobs as $job) {
-            $streams[] = $job->getStdout()->getResource();
-            $streams[] = $job->getStderr()->getResource();
+            if ($job->getStdout()->isOpen()) {
+                $streams[] = $job->getStdout()->getResource();
+            }
+            if ($job->getStderr()->isOpen()) {
+                $streams[] = $job->getStderr()->getResource();
+            }
         }
         return $streams;
     }

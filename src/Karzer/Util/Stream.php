@@ -25,16 +25,17 @@ class Stream
     protected $readLength = 8192;
 
     /**
-     * @param resource $stream
+     * @param resource $resource
+     * @param int $mode
      * @throws \Karzer\Framework\Exception
      */
-    public function __construct($stream, $mode = self::BLOCKING_MODE)
+    public function __construct($resource, $mode = self::BLOCKING_MODE)
     {
-        if (!is_resource($stream)) {
+        if (!is_resource($resource)) {
             throw new Exception('Stream is not a resource');
         }
 
-        $this->resource = $stream;
+        $this->resource = $resource;
 
         $this->setBlocking($mode);
     }
@@ -102,7 +103,7 @@ class Stream
      */
     public function isOpen()
     {
-        return $this->resource !== null;
+        return is_resource($this->resource);
     }
 
     /**

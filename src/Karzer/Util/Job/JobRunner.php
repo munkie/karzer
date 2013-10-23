@@ -6,6 +6,7 @@ use Karzer\Framework\Exception;
 use Karzer\Util\Stream;
 use PHPUnit_Util_PHP_Default;
 use PHPUnit_Framework_Exception;
+use ErrorException;
 
 class JobRunner extends PHPUnit_Util_PHP_Default
 {
@@ -74,12 +75,20 @@ class JobRunner extends PHPUnit_Util_PHP_Default
 
         proc_close($job->getProcess());
 
-        $this->processChildResult(
-            $job->getTest(),
-            $job->getResult(),
-            $job->getStdout()->getBuffer(),
-            $job->getStderr()->getBuffer()
-        );
+        try {
+            $this->processChildResult(
+                $job->getTest(),
+                $job->getResult(),
+                $job->getStdout()->getBuffer(),
+                $job->getStderr()->getBuffer()
+            );
+        } catch (ErrorException $e) {
+            $job->getResult()->addError(
+                $job->getTest(),
+                new PHPUnit_Framework_Exception(trim($job->getStdout()->getBuffer()), 0, $e),
+                0
+            );
+        }
 
         $job->endTest();
     }
@@ -102,20 +111,24 @@ class JobRunner extends PHPUnit_Util_PHP_Default
         $processedJobs = array();
         do {
             $r = $this->pool->getStreams();
+            $w = array();
+            $x = array();
 
-            $result = stream_select($r, $w = null, $x = null, $this->timeout);
+            if (count($r) > 0) {
+                $result = stream_select($r, $w, $x, $this->timeout);
 
-            if (false === $result) {
-                throw new Exception('Stream select failed');
-            }
+                if (false === $result) {
+                    throw new Exception('Stream select failed');
+                }
 
-            foreach ($r as $stream) {
-                foreach ($this->pool as $job) {
-                    if ($job->hasStream($stream)) {
-                        $job->getStream($stream)->read();
-                        if ($job->isClosed()) {
-                            $this->stopJob($job);
-                            $processedJobs[] = $job;
+                foreach ($r as $stream) {
+                    foreach ($this->pool as $job) {
+                        if ($job->hasStream($stream)) {
+                            $job->getStream($stream)->read();
+                            if ($job->isClosed()) {
+                                $this->stopJob($job);
+                                $processedJobs[] = $job;
+                            }
                         }
                     }
                 }
