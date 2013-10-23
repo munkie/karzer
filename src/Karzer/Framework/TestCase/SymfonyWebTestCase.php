@@ -111,6 +111,17 @@ abstract class SymfonyWebTestCase extends WebTestCase implements JobTestInterfac
     }
 
     /**
+     * @param Exception $e
+     */
+    protected function onNotSuccessfulTest(Exception $e)
+    {
+        if ($this->isInIsolation()) {
+            $e = SerializableException::factory($e);
+        }
+        parent::onNotSuccessfulTest($e);
+    }
+
+    /**
      * @return string
      */
     protected static function getPhpUnitXmlDir()

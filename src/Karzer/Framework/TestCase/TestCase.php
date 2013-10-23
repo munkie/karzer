@@ -2,6 +2,8 @@
 
 namespace Karzer\Framework\TestCase;
 
+use Exception;
+use Karzer\Framework\SerializableException;
 use Karzer\Framework\TextTemplateYield;
 use Karzer\Util\Job\Job;
 use PHPUnit_Framework_TestResult;
@@ -89,10 +91,33 @@ abstract class TestCase extends PHPUnit_Framework_TestCase implements JobTestInt
      */
     public function useErrorHandler()
     {
-        // XXX Dirty hack to get useErrorHandler property value
+        // XXX Dirty hack to get useErrorHandler private property value
         $property = new ReflectionProperty('PHPUnit_Framework_TestCase', 'useErrorHandler');
         $property->setAccessible(true);
         $value = $property->getValue($this);
         return null !== $value;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isInIsolation()
+    {
+        // XXX Dirty hack to get inIsolation private property value
+        $property = new ReflectionProperty('PHPUnit_Framework_TestCase', 'inIsolation');
+        $property->setAccessible(true);
+        $value = $property->getValue($this);
+        return (bool) $value;
+    }
+
+    /**
+     * @param Exception $e
+     */
+    protected function onNotSuccessfulTest(Exception $e)
+    {
+        if ($this->isInIsolation()) {
+            $e = SerializableException::factory($e);
+        }
+        parent::onNotSuccessfulTest($e);
     }
 }
