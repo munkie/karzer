@@ -32,6 +32,8 @@ class JobRunner extends PHPUnit_Util_PHP_Default
      */
     public function startJob(Job $job)
     {
+        $this->pool->add($job);
+
         $process = proc_open(
             $this->getPhpBinary(),
             array(
@@ -63,8 +65,6 @@ class JobRunner extends PHPUnit_Util_PHP_Default
 
         $job->setStdout($stdout);
         $job->setStderr($stderr);
-
-        $this->pool->add($job);
     }
 
     /**
@@ -91,7 +91,7 @@ class JobRunner extends PHPUnit_Util_PHP_Default
      * @return Job[]|bool
      * @throws \Karzer\Framework\Exception
      */
-    public function getNext(Job $job = null)
+    public function run(Job $job = null)
     {
         if ($job) {
             $this->startJob($job);
@@ -125,5 +125,17 @@ class JobRunner extends PHPUnit_Util_PHP_Default
         } while ($this->pool->isFull());
 
         return $processedJobs;
+    }
+
+    /**
+     * @return Job[]
+     */
+    public function finishRun()
+    {
+        $jobs = array();
+        while (false !== ($processedJobs = $this->run())) {
+            $jobs = array_merge($processedJobs, $jobs);
+        }
+        return $jobs;
     }
 }

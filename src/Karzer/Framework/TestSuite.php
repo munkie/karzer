@@ -53,9 +53,14 @@ class TestSuite extends PHPUnit_Framework_TestSuite
     {
         if ($test instanceof TestCase && $test->runTestInSeparateProcess()) {
             $job = $test->createJob($result);
-            $this->runner->getNext($job);
+            $this->runner->run($job);
         } else {
             parent::runTest($test, $result);
         }
+    }
+
+    protected function tearDown()
+    {
+        $this->runner->finishRun();
     }
 }

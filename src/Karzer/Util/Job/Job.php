@@ -93,10 +93,13 @@ class Job
      */
     public function render()
     {
-        $this->modifyTempate();
+        $this->modifyTemplate();
         return $this->template->render();
     }
 
+    /**
+     * XXX dirty hack of template
+     */
     protected function modifyTemplate()
     {
         $property = new \ReflectionProperty($this->template, 'template');
