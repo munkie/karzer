@@ -62,7 +62,7 @@ abstract class SymfonyWebTestCase extends WebTestCase implements JobTestInterfac
     {
         try {
             $this->yieldTemplate = true;
-            parent::run($result);
+            $this->run($result);
         } catch (TextTemplateYield $yield) {
             return new Job($yield->getTemplate(), $this, $result);
         }

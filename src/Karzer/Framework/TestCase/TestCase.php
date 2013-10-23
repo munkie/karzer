@@ -55,7 +55,7 @@ abstract class TestCase extends PHPUnit_Framework_TestCase implements JobTestInt
     {
         try {
             $this->yieldTemplate = true;
-            parent::run($result);
+            $this->run($result);
         } catch (TextTemplateYield $yield) {
             return new Job($yield->getTemplate(), $this, $result);
         }
