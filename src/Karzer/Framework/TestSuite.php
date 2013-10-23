@@ -3,7 +3,6 @@
 namespace Karzer\Framework;
 
 use Karzer\Util\Job\JobRunner;
-use Karzer\Framework\TestCase;
 use PHPUnit_Framework_Test;
 use PHPUnit_Framework_TestSuite;
 use PHPUnit_Framework_TestResult;
@@ -17,14 +16,15 @@ class TestSuite extends PHPUnit_Framework_TestSuite
 
     /**
      * @param PHPUnit_Framework_TestSuite $testSuite
+     * @param int $threads
      */
-    public function __construct(PHPUnit_Framework_TestSuite $testSuite)
+    public function __construct(PHPUnit_Framework_TestSuite $testSuite, $threads)
     {
         foreach ($this->getSuiteTests($testSuite) as $test) {
             $this->addTest($test);
         }
 
-        $this->runner = new JobRunner();
+        $this->runner = new JobRunner($threads);
     }
 
     /**
@@ -51,10 +51,11 @@ class TestSuite extends PHPUnit_Framework_TestSuite
      */
     public function runTest(PHPUnit_Framework_Test $test, PHPUnit_Framework_TestResult $result)
     {
-        if ($test instanceof TestCase) {
+        if ($test instanceof TestCase && $test->runTestInSeparateProcess()) {
             $job = $test->createJob($result);
             $this->runner->getNext($job);
+        } else {
+            parent::runTest($test, $result);
         }
-
     }
 }

@@ -32,7 +32,7 @@ class Job
     /**
      * @var int
      */
-    protected $poolNumber;
+    protected $poolPosition;
 
     /**
      * @var resource
@@ -93,23 +93,51 @@ class Job
      */
     public function render()
     {
-        return $this->getTemplate()->render();
+        $this->modifyTempate();
+        return $this->template->render();
+    }
+
+    protected function modifyTemplate()
+    {
+        $property = new \ReflectionProperty($this->template, 'template');
+        $property->setAccessible(true);
+        $template = $property->getValue($this->template);
+
+        $modifiedTemplate = str_replace(
+            "\$test->setInIsolation(TRUE);\n",
+            "\$test->setInIsolation(TRUE);\n    \$test->setPoolPosition({poolPosition});\n",
+            $template
+        );
+
+        $property->setValue($this->template, $modifiedTemplate);
+
+        $this->template->setVar(array('poolPosition' => $this->getPoolPosition()));
     }
 
     public function startTest()
     {
         $this->result->startTest($this->test);
+        $this->backupErrorHandlerSettings();
+    }
+
+    public function endTest()
+    {
+        $this->restoreErrorHandlerSettings();
+        $this->test->unsetTestResultObject();
+    }
+
+    protected function backupErrorHandlerSettings()
+    {
         if ($this->test->useErrorHandler()) {
             $this->oldErrorHandlerSetting = $this->result->getConvertErrorsToExceptions();
         }
     }
 
-    public function endTest()
+    protected function restoreErrorHandlerSettings()
     {
         if ($this->test->useErrorHandler()) {
             $this->result->convertErrorsToExceptions($this->oldErrorHandlerSetting);
         }
-        $this->test->unsetTestResultObject();
     }
 
     /**
@@ -195,16 +223,16 @@ class Job
     /**
      * @param int $poolNumber
      */
-    public function setPoolNumber($poolNumber)
+    public function setPoolPosition($poolNumber)
     {
-        $this->poolNumber = $poolNumber;
+        $this->poolPosition = $poolNumber;
     }
 
     /**
      * @return int
      */
-    public function getPoolNumber()
+    public function getPoolPosition()
     {
-        return $this->poolNumber;
+        return $this->poolPosition;
     }
 }

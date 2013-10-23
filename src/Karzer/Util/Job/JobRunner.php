@@ -19,11 +19,11 @@ class JobRunner extends PHPUnit_Util_PHP_Default
     protected $timeout = null;
 
     /**
-     *
+     * @param int $threads
      */
-    public function __construct()
+    public function __construct($threads)
     {
-        $this->pool = new JobPool(3);
+        $this->pool = new JobPool($threads);
     }
 
     /**
@@ -122,7 +122,7 @@ class JobRunner extends PHPUnit_Util_PHP_Default
                     }
                 }
             }
-        } while (count($processedJobs) == 0);
+        } while ($this->pool->isFull());
 
         return $processedJobs;
     }

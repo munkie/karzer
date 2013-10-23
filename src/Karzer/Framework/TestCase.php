@@ -10,9 +10,40 @@ use Text_Template;
 abstract class TestCase extends PHPUnit_Framework_TestCase
 {
     /**
+     * @var int
+     */
+    protected $poolPosition;
+
+    /**
      * @var bool
      */
     protected $yieldTemplate = false;
+
+    /**
+     * @param int $poolPosition
+     */
+    public function setPoolPosition($poolPosition)
+    {
+        if (null === $this->poolPosition) {
+            $this->poolPosition = $poolPosition;
+        }
+    }
+
+    /**
+     * @return int
+     */
+    public function getPoolPosition()
+    {
+        return $this->poolPosition;
+    }
+
+    /**
+     * @return bool
+     */
+    public function runTestInSeparateProcess()
+    {
+        return $this->runTestInSeparateProcess;
+    }
 
     /**
      * @param PHPUnit_Framework_TestResult $result
@@ -26,7 +57,6 @@ abstract class TestCase extends PHPUnit_Framework_TestCase
         } catch (TextTemplateYield $yield) {
             return new Job($yield->getTemplate(), $this, $result);
         }
-        $this->yieldTemplate = false;
     }
 
     /**

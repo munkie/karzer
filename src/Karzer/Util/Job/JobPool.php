@@ -21,7 +21,7 @@ class JobPool implements IteratorAggregate, Countable
     protected $jobs;
 
     /**
-     * @var int
+     * @var Job[]
      */
     protected $positions = array();
 
@@ -54,7 +54,7 @@ class JobPool implements IteratorAggregate, Countable
         do {
             if (!isset($this->positions[$position])) {
                 $this->positions[$position] = $job;
-                $job->setPoolNumber($position);
+                $job->setPoolPosition($position);
                 return;
             }
         } while (++$position < $this->max);
