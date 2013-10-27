@@ -87,7 +87,12 @@ class TestSuite extends PHPUnit_Framework_TestSuite
                     $job = $test->createJob($result);
                     $this->runner->enqueueJob($job);
                 } else {
-                    throw new Exception('Test must implement JobTestInterface to be run by karzer');
+                    throw new Exception(
+                        sprintf(
+                            'Test must implement JobTestInterface to be run by karzer - %s',
+                            PHPUnit_Util_Test::describe($test)
+                        )
+                    );
                     $this->runTest($test, $result);
                 }
             }
