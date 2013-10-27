@@ -3,8 +3,9 @@
 namespace Karzer\Util\Job;
 
 use Karzer\Framework\Exception;
-use Karzer\Util\Stream;
 use SplObjectStorage;
+use SplQueue;
+use SplFixedArray;
 use IteratorAggregate;
 use Traversable;
 use Countable;
@@ -17,22 +18,45 @@ class JobPool implements IteratorAggregate, Countable
     protected $max;
 
     /**
+     * @var SplQueue|Job[]
+     */
+    protected $queue;
+
+    /**
      * @var SplObjectStorage|Job[]
      */
     protected $jobs;
 
     /**
-     * @var Job[]
+     * @var SplFixedArray|Job[]
      */
-    protected $positions = array();
+    protected $positions;
 
     /**
      * @param int $max
      */
     public function __construct($max)
     {
-        $this->max = $max;
+        $this->max = (int) $max;
         $this->jobs = new SplObjectStorage();
+        $this->queue = new SplQueue();
+        $this->positions = new SplFixedArray($this->max);
+    }
+
+    /**
+     * @param Job $job
+     */
+    public function enqueue(Job $job)
+    {
+        $this->queue->enqueue($job);
+    }
+
+    /**
+     * @return Job
+     */
+    public function dequeue()
+    {
+        return $this->queue->dequeue();
     }
 
     /**
@@ -43,6 +67,15 @@ class JobPool implements IteratorAggregate, Countable
     {
         $this->setPoolNumber($job);
         $this->jobs->attach($job);
+    }
+
+    /**
+     * @param Job $job
+     */
+    public function remove(Job $job)
+    {
+        $this->removePoolNumber($job);
+        $this->jobs->detach($job);
     }
 
     /**
@@ -78,28 +111,11 @@ class JobPool implements IteratorAggregate, Countable
     }
 
     /**
-     * @param Job $job
-     */
-    public function remove(Job $job)
-    {
-        $this->removePoolNumber($job);
-        $this->jobs->detach($job);
-    }
-
-    /**
      * @return int
      */
     public function getMax()
     {
         return $this->max;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isFull()
-    {
-        return $this->count() == $this->max;
     }
 
     /**
@@ -133,6 +149,14 @@ class JobPool implements IteratorAggregate, Countable
     public function count()
     {
         return $this->jobs->count();
+    }
+
+    /**
+     * @return bool
+     */
+    public function isFull()
+    {
+        return $this->count() == $this->max;
     }
 
     /**

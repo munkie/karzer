@@ -7,6 +7,7 @@ use Karzer\Util\Stream;
 use PHPUnit_Util_PHP_Default;
 use PHPUnit_Framework_Exception;
 use ErrorException;
+use RuntimeException;
 
 class JobRunner extends PHPUnit_Util_PHP_Default
 {
@@ -21,11 +22,26 @@ class JobRunner extends PHPUnit_Util_PHP_Default
     protected $timeout = null;
 
     /**
-     * @param int $threads
+     * @param JobPool $pool
+     * @param null $timeout
      */
-    public function __construct($threads)
+    public function __construct(JobPool $pool, $timeout = null)
     {
-        $this->pool = new JobPool($threads);
+        $this->pool = $pool;
+        $this->timeout = $timeout;
+    }
+
+    /**
+     * @param Job $job
+     */
+    public function enqueueJob(Job $job)
+    {
+        $this->pool->enqueue($job);
+    }
+
+    public function dequeueJob()
+    {
+        return $this->pool->dequeue();
     }
 
     /**
@@ -94,18 +110,29 @@ class JobRunner extends PHPUnit_Util_PHP_Default
     }
 
     /**
-     * @param Job $job
+     * Fill pool with jobs from queue
+     * @return bool
+     */
+    protected function fillPool()
+    {
+        while (!$this->pool->isFull()) {
+            try {
+                $job = $this->pool->dequeue();
+                $this->startJob($job);
+            } catch (RuntimeException $e) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
      * @return Job[]|bool
      * @throws \Karzer\Framework\Exception
      */
-    public function run(Job $job = null)
+    public function run()
     {
-        if ($job) {
-            $this->startJob($job);
-            if (!$this->pool->isFull()) {
-                return array();
-            }
-        }
+        $this->fillPool();
 
         if ($this->pool->isEmpty()) {
             return false;
@@ -131,25 +158,14 @@ class JobRunner extends PHPUnit_Util_PHP_Default
                             if ($job->isClosed()) {
                                 $this->stopJob($job);
                                 $processedJobs[] = $job;
+                                $this->fillPool();
                             }
                         }
                     }
                 }
             }
-        } while ($this->pool->isFull());
+        } while (!$this->pool->isEmpty());
 
         return $processedJobs;
-    }
-
-    /**
-     * @return Job[]
-     */
-    public function finishRun()
-    {
-        $jobs = array();
-        while (false !== ($processedJobs = $this->run())) {
-            $jobs = array_merge($processedJobs, $jobs);
-        }
-        return $jobs;
     }
 }

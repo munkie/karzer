@@ -3,10 +3,13 @@
 namespace Karzer\Framework;
 
 use Karzer\Framework\TestCase\JobTestInterface;
+use Karzer\Util\Job\JobPool;
 use Karzer\Util\Job\JobRunner;
 use PHPUnit_Framework_Test;
 use PHPUnit_Framework_TestSuite;
 use PHPUnit_Framework_TestResult;
+use PHPUnit_Framework_TestCase;
+use PHPUnit_Util_Test;
 
 class TestSuite extends PHPUnit_Framework_TestSuite
 {
@@ -25,7 +28,7 @@ class TestSuite extends PHPUnit_Framework_TestSuite
             $this->addTest($test);
         }
 
-        $this->runner = new JobRunner($threads);
+        $this->runner = new JobRunner(new JobPool($threads));
     }
 
     /**
@@ -50,22 +53,117 @@ class TestSuite extends PHPUnit_Framework_TestSuite
         return $tests;
     }
 
-    /**
-     * @param PHPUnit_Framework_Test $test
-     * @param PHPUnit_Framework_TestResult $result
-     */
-    public function runTest(PHPUnit_Framework_Test $test, PHPUnit_Framework_TestResult $result)
-    {
-        if ($test instanceof JobTestInterface && $test->runTestInSeparateProcess()) {
-            $job = $test->createJob($result);
-            $this->runner->run($job);
-        } else {
-            parent::runTest($test, $result);
+    public function run(
+        PHPUnit_Framework_TestResult $result = null,
+        $filter = false,
+        array $groups = array(),
+        array $excludeGroups = array(),
+        $processIsolation = false
+    ) {
+        if ($result === null) {
+            $result = $this->createResult();
         }
+
+        $result->startTestSuite($this);
+
+        foreach ($this->getTests($groups) as $test) {
+            if ($result->shouldStop()) {
+                break;
+            }
+
+            $runTest = $this->testMatchesFilter($test, $filter)
+                        && $this->testIsNotInExcludeGroup($test, $excludeGroups);
+
+            if ($runTest) {
+                if ($test instanceof PHPUnit_Framework_TestCase) {
+                    $test->setBackupGlobals($this->backupGlobals);
+                    $test->setBackupStaticAttributes(
+                        $this->backupStaticAttributes
+                    );
+                    $test->setRunTestInSeparateProcess($processIsolation);
+                }
+
+                if ($test instanceof JobTestInterface && $test->runTestInSeparateProcess()) {
+                    $job = $test->createJob($result);
+                    $this->runner->enqueueJob($job);
+                } else {
+                    throw new Exception('Test must implement JobTestInterface to be run by karzer');
+                    $this->runTest($test, $result);
+                }
+            }
+        }
+
+        $this->runner->run();
+
+        $result->endTestSuite($this);
+
+        return $result;
     }
 
-    protected function tearDown()
+    /**
+     * @param array $groups
+     * @return array|SplObjectStorage|PHPUnit_Framework_Test[]
+     */
+    protected function getTests(array $groups = array())
     {
-        $this->runner->finishRun();
+        if (empty($groups)) {
+            $tests = $this->tests;
+        } else {
+            $tests = new SplObjectStorage;
+
+            foreach ($groups as $group) {
+                if (isset($this->groups[$group])) {
+                    foreach ($this->groups[$group] as $test) {
+                        $tests->attach($test);
+                    }
+                }
+            }
+        }
+
+        return $tests;
+    }
+
+    /**
+     * @param PHPUnit_Framework_Test $test
+     * @param string $filter
+     * @return bool
+     */
+    protected function testMatchesFilter(PHPUnit_Framework_Test $test, $filter)
+    {
+        if ($filter !== false) {
+            $tmp = PHPUnit_Util_Test::describe($test, false);
+
+            if ($tmp[0] != '') {
+                $name = join('::', $tmp);
+            } else {
+                $name = $tmp[1];
+            }
+
+            if (preg_match($filter, $name) == 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * @param PHPUnit_Framework_Test $test
+     * @param array $excludeGroups
+     * @return bool
+     */
+    protected function testIsNotInExcludeGroup(PHPUnit_Framework_Test $test, array $excludeGroups = array())
+    {
+        if (!empty($excludeGroups)) {
+            foreach ($this->groups as $_group => $_tests) {
+                if (in_array($_group, $excludeGroups)) {
+                    foreach ($_tests as $_test) {
+                        if ($test === $_test) {
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+        return true;
     }
 }
