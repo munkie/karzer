@@ -158,6 +158,9 @@ class JobRunner extends PHPUnit_Util_PHP_Default
                             if ($job->isClosed()) {
                                 $this->stopJob($job);
                                 $processedJobs[] = $job;
+                                if ($job->getResult()->shouldStop()) {
+                                    break(3);
+                                }
                                 $this->fillPool();
                             }
                         }
