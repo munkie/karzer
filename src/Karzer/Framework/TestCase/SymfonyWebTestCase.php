@@ -4,6 +4,7 @@ namespace Karzer\Framework\TestCase;
 
 use Karzer\Framework\SerializableException;
 use Karzer\Framework\TextTemplateYield;
+use Karzer\Karzer;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Karzer\Util\Job\Job;
 use PHPUnit_Framework_TestResult;
@@ -30,8 +31,7 @@ abstract class SymfonyWebTestCase extends WebTestCase implements JobTestInterfac
     {
         if (null === $this->poolPosition) {
             $this->poolPosition = $poolPosition;
-            $_SERVER['SYMFONY__KERNEL__POOL_POSITION'] = $poolPosition;
-            $_SERVER['SYMFONY__KERNEL__POOL_POSITION_NAME'] = "_$poolPosition";
+            Karzer::setThreadNumber($poolPosition);
         }
     }
 
