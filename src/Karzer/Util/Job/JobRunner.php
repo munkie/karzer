@@ -6,7 +6,7 @@ use Karzer\Framework\Exception;
 use Karzer\Util\Stream;
 use PHPUnit_Util_PHP_Default;
 use PHPUnit_Framework_Exception;
-use ErrorException;
+use Karzer\Framework\ErrorException;
 use RuntimeException;
 
 class JobRunner extends PHPUnit_Util_PHP_Default
@@ -52,19 +52,23 @@ class JobRunner extends PHPUnit_Util_PHP_Default
     {
         $this->pool->add($job);
 
-        $process = proc_open(
-            $this->getPhpBinary(),
-            array(
-                0 => array('pipe', 'r'),
-                1 => array('pipe', 'w'),
-                2 => array('pipe', 'w')
-            ),
-            $pipes
-        );
+        ErrorException::setHandler();
 
-        if (!is_resource($process)) {
+        try {
+            $process = proc_open(
+                $this->getPhpBinary(),
+                array(
+                    0 => array('pipe', 'r'),
+                    1 => array('pipe', 'w'),
+                    2 => array('pipe', 'w')
+                ),
+                $pipes
+            );
+            ErrorException::restoreHandler();
+        } catch (\ErrorException $e) {
+            ErrorException::restoreHandler();
             throw new PHPUnit_Framework_Exception(
-                'Unable to create process for process isolation.'
+                'Unable to create process for process isolation.', 0, $e
             );
         }
 
@@ -98,7 +102,7 @@ class JobRunner extends PHPUnit_Util_PHP_Default
                 $job->getStdout()->getBuffer(),
                 $job->getStderr()->getBuffer()
             );
-        } catch (ErrorException $e) {
+        } catch (\ErrorException $e) {
             $job->getResult()->addError(
                 $job->getTest(),
                 new PHPUnit_Framework_Exception(trim($job->getStdout()->getBuffer()), 0, $e),
