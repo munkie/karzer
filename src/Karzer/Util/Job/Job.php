@@ -3,6 +3,7 @@
 namespace Karzer\Util\Job;
 
 use Karzer\Framework\TestCase\JobTestInterface;
+use Karzer\Util\Process;
 use Text_Template;
 use PHPUnit_Framework_Test;
 use PHPUnit_Framework_TestResult;
@@ -37,19 +38,9 @@ class Job
     protected $poolPosition;
 
     /**
-     * @var resource
+     * @var Process
      */
     protected $process;
-
-    /**
-     * @var Stream
-     */
-    protected $stderr;
-
-    /**
-     * @var Stream
-     */
-    protected $stdout;
 
     /**
      * @var string
@@ -127,10 +118,28 @@ class Job
         $this->template->setVar(array('poolPosition' => $this->getPoolPosition()));
     }
 
+    /**
+     * Php executable
+     * @param string $php
+     */
+    public function start($php)
+    {
+        $process = new Process($php);
+        $process->open();
+        $process->writeScript($this->render());
+
+        $this->setProcess($process);
+    }
+
     public function startTest()
     {
         $this->result->startTest($this->test);
         $this->backupErrorHandlerSettings();
+    }
+
+    public function stop()
+    {
+        return $this->getProcess()->close();
     }
 
     public function endTest()
@@ -156,13 +165,13 @@ class Job
     /**
      * @param resource $process
      */
-    public function setProcess($process)
+    public function setProcess(Process $process)
     {
         $this->process = $process;
     }
 
     /**
-     * @return resource
+     * @return Process
      */
     public function getProcess()
     {
@@ -170,27 +179,11 @@ class Job
     }
 
     /**
-     * @param Stream $stderr
-     */
-    public function setStderr(Stream $stderr)
-    {
-        $this->stderr = $stderr;
-    }
-
-    /**
      * @return Stream
      */
     public function getStderr()
     {
-        return $this->stderr;
-    }
-
-    /**
-     * @param Stream $stdout
-     */
-    public function setStdout(Stream $stdout)
-    {
-        $this->stdout = $stdout;
+        return $this->getProcess()->getStderr();
     }
 
     /**
@@ -198,7 +191,7 @@ class Job
      */
     public function getStdout()
     {
-        return $this->stdout;
+        return $this->getProcess()->getStdout();
     }
 
     /**
@@ -207,7 +200,7 @@ class Job
      */
     public function hasStream($stream)
     {
-        return $this->stdout->isEqualTo($stream) || $this->stderr->isEqualTo($stream);
+        return $this->getStdout()->isEqualTo($stream) || $this->getStderr()->isEqualTo($stream);
     }
 
     /**
@@ -216,10 +209,10 @@ class Job
      */
     public function getStream($stream)
     {
-        if ($this->stdout->isEqualTo($stream)) {
-            return $this->stdout;
-        } elseif ($this->stderr->isEqualTo($stream)) {
-            return $this->stderr;
+        if ($this->getStdout()->isEqualTo($stream)) {
+            return $this->getStdout();
+        } elseif ($this->getStderr()->isEqualTo($stream)) {
+            return $this->getStderr();
         } else {
             return null;
         }
@@ -230,7 +223,7 @@ class Job
      */
     public function isClosed()
     {
-        return !$this->stderr->isOpen() && !$this->stdout->isOpen();
+        return !$this->getStderr()->isOpen() && !$this->getStdout()->isOpen();
     }
 
     /**

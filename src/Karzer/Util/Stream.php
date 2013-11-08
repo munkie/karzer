@@ -29,7 +29,7 @@ class Stream
      * @param int $mode
      * @throws \Karzer\Framework\Exception
      */
-    public function __construct($resource, $mode = self::BLOCKING_MODE)
+    public function __construct($resource, $mode = null)
     {
         if (!is_resource($resource)) {
             throw new Exception('Stream is not a resource');
@@ -37,13 +37,15 @@ class Stream
 
         $this->resource = $resource;
 
-        $this->setBlocking($mode);
+        if (null !== $mode) {
+            $this->setBlocking($mode);
+        }
     }
 
     /**
      * @param int $mode
      */
-    public function setBlocking($mode = self::NON_BLOCKING_MODE)
+    public function setBlocking($mode = self::BLOCKING_MODE)
     {
         stream_set_blocking($this->resource, $mode);
     }
@@ -84,6 +86,16 @@ class Stream
         }
     }
 
+    /**
+     * @param string $string
+     * @param int $length
+     * @return int
+     */
+    public function write($string)
+    {
+        return fwrite($this->resource, $string);
+    }
+
     public function close()
     {
         fclose($this->resource);
@@ -91,11 +103,12 @@ class Stream
     }
 
     /**
+     * @param bool $trim
      * @return string
      */
-    public function getBuffer()
+    public function getBuffer($trim = false)
     {
-        return $this->buffer;
+        return ($trim) ? trim($this->buffer) : $this->buffer;
     }
 
     /**

@@ -3,10 +3,11 @@
 namespace Karzer\Util\Job;
 
 use Karzer\Framework\Exception;
+use Karzer\Util\Process;
 use Karzer\Util\Stream;
 use PHPUnit_Util_PHP_Default;
 use PHPUnit_Framework_Exception;
-use Karzer\Framework\ErrorException;
+use ErrorException;
 use RuntimeException;
 
 class JobRunner extends PHPUnit_Util_PHP_Default
@@ -52,38 +53,8 @@ class JobRunner extends PHPUnit_Util_PHP_Default
     {
         $this->pool->add($job);
 
-        ErrorException::setHandler();
-
-        try {
-            $process = proc_open(
-                $this->getPhpBinary(),
-                array(
-                    0 => array('pipe', 'r'),
-                    1 => array('pipe', 'w'),
-                    2 => array('pipe', 'w')
-                ),
-                $pipes
-            );
-            ErrorException::restoreHandler();
-        } catch (\ErrorException $e) {
-            ErrorException::restoreHandler();
-            throw new PHPUnit_Framework_Exception(
-                'Unable to create process for process isolation.', 0, $e
-            );
-        }
-
-        $job->setProcess($process);
-
+        $job->start($this->getPhpBinary());
         $job->startTest();
-
-        $this->process($pipes[0], $job->render());
-        fclose($pipes[0]);
-
-        $stdout = new Stream($pipes[1], Stream::NON_BLOCKING_MODE);
-        $stderr = new Stream($pipes[2], Stream::NON_BLOCKING_MODE);
-
-        $job->setStdout($stdout);
-        $job->setStderr($stderr);
     }
 
     /**
@@ -93,7 +64,7 @@ class JobRunner extends PHPUnit_Util_PHP_Default
     {
         $this->pool->remove($job);
 
-        proc_close($job->getProcess());
+        $job->stop();
 
         try {
             $this->processChildResult(
@@ -102,10 +73,10 @@ class JobRunner extends PHPUnit_Util_PHP_Default
                 $job->getStdout()->getBuffer(),
                 $job->getStderr()->getBuffer()
             );
-        } catch (\ErrorException $e) {
+        } catch (ErrorException $e) {
             $job->getResult()->addError(
                 $job->getTest(),
-                new PHPUnit_Framework_Exception(trim($job->getStdout()->getBuffer()), 0, $e),
+                new PHPUnit_Framework_Exception($job->getStdout()->getBuffer(true), 0, $e),
                 0
             );
         }
