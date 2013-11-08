@@ -13,6 +13,7 @@ class Command extends PHPUnit_TextUI_Command
     {
         $this->longOptions['threads='] = 'handleThreads';
         $this->arguments['threads'] = 2;
+        $this->arguments['processIsolation'] = true;
     }
 
     /**
