@@ -91,12 +91,11 @@ class JobRunner extends PHPUnit_Util_PHP_Default
     protected function fillPool()
     {
         while (!$this->pool->isFull()) {
-            try {
-                $job = $this->pool->dequeue();
-                $this->startJob($job);
-            } catch (RuntimeException $e) {
+            if ($this->pool->queueIsEmpty()) {
                 return false;
             }
+            $job = $this->pool->dequeue();
+            $this->startJob($job);
         }
         return true;
     }

@@ -60,6 +60,14 @@ class JobPool implements IteratorAggregate, Countable
     }
 
     /**
+     * @return bool
+     */
+    public function queueIsEmpty()
+    {
+        return $this->queue->isEmpty();
+    }
+
+    /**
      * @param Job $job
      * @throws \Karzer\Framework\Exception
      */
