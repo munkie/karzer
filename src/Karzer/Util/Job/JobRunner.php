@@ -96,18 +96,13 @@ class JobRunner extends PHPUnit_Util_PHP_Default
 
     /**
      * Fill pool with jobs from queue
-     * @return bool
      */
     protected function fillPool()
     {
-        while (!$this->pool->isFull()) {
-            if ($this->pool->queueIsEmpty()) {
-                return false;
-            }
+        while (!$this->pool->isFull() && !$this->pool->queueIsEmpty()) {
             $job = $this->pool->dequeue();
             $this->startJob($job);
         }
-        return true;
     }
 
     /**
@@ -118,12 +113,7 @@ class JobRunner extends PHPUnit_Util_PHP_Default
     {
         $this->fillPool();
 
-        if ($this->pool->isEmpty()) {
-            return false;
-        }
-
-        $processedJobs = array();
-        do {
+        while (!$this->pool->isEmpty()) {
             $r = $this->pool->getStreams();
             $w = array();
             $x = array();
@@ -141,7 +131,6 @@ class JobRunner extends PHPUnit_Util_PHP_Default
                             $job->getStream($stream)->read();
                             if ($job->isClosed()) {
                                 $this->stopJob($job);
-                                $processedJobs[] = $job;
                                 if ($job->getResult()->shouldStop()) {
                                     break(3);
                                 }
@@ -151,8 +140,6 @@ class JobRunner extends PHPUnit_Util_PHP_Default
                     }
                 }
             }
-        } while (!$this->pool->isEmpty());
-
-        return $processedJobs;
+        }
     }
 }
