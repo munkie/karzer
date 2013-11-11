@@ -2,6 +2,7 @@
 
 namespace Karzer\Framework;
 
+use Karzer\Exception\RuntimeException;
 use Karzer\Framework\TestCase\JobTestInterface;
 use Karzer\Util\Job\JobPool;
 use Karzer\Util\Job\JobRunner;
@@ -10,6 +11,7 @@ use PHPUnit_Framework_TestSuite;
 use PHPUnit_Framework_TestResult;
 use PHPUnit_Framework_TestCase;
 use PHPUnit_Util_Test;
+use SplObjectStorage;
 
 class TestSuite extends PHPUnit_Framework_TestSuite
 {
@@ -53,6 +55,15 @@ class TestSuite extends PHPUnit_Framework_TestSuite
         return $tests;
     }
 
+    /**
+     * @param PHPUnit_Framework_TestResult $result
+     * @param string|bool $filter
+     * @param array $groups
+     * @param array $excludeGroups
+     * @param bool $processIsolation
+     * @return PHPUnit_Framework_TestResult
+     * @throws \Karzer\Exception\RuntimeException
+     */
     public function run(
         PHPUnit_Framework_TestResult $result = null,
         $filter = false,
@@ -83,17 +94,18 @@ class TestSuite extends PHPUnit_Framework_TestSuite
                     $test->setRunTestInSeparateProcess($processIsolation);
                 }
 
-                if ($test instanceof JobTestInterface && $test->runTestInSeparateProcess()) {
-                    $job = $test->createJob($result);
-                    $this->runner->enqueueJob($job);
-                } else {
-                    throw new Exception(
+                if (!$test instanceof JobTestInterface) {
+                    throw new RuntimeException(
                         sprintf(
                             'Test must implement JobTestInterface to be run by karzer - %s',
                             PHPUnit_Util_Test::describe($test)
                         )
                     );
-                    $this->runTest($test, $result);
+                } elseif (!$test->runTestInSeparateProcess()) {
+                    throw new RuntimeException('Tests must by run in process isolation mode');
+                } else {
+                    $job = $test->createJob($result);
+                    $this->runner->enqueueJob($job);
                 }
             }
         }

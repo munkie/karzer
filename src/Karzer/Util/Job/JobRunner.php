@@ -2,13 +2,10 @@
 
 namespace Karzer\Util\Job;
 
-use Karzer\Framework\Exception;
-use Karzer\Util\Process;
-use Karzer\Util\Stream;
+use Karzer\Exception\RuntimeException;
 use PHPUnit_Util_PHP_Default;
 use PHPUnit_Framework_Exception;
 use ErrorException;
-use RuntimeException;
 
 class JobRunner extends PHPUnit_Util_PHP_Default
 {
@@ -101,8 +98,8 @@ class JobRunner extends PHPUnit_Util_PHP_Default
     }
 
     /**
+     * @throws \Karzer\Exception\RuntimeException
      * @return Job[]|bool
-     * @throws \Karzer\Framework\Exception
      */
     public function run()
     {
@@ -122,7 +119,7 @@ class JobRunner extends PHPUnit_Util_PHP_Default
                 $result = stream_select($r, $w, $x, $this->timeout);
 
                 if (false === $result) {
-                    throw new Exception('Stream select failed');
+                    throw new RuntimeException('Stream select failed');
                 }
 
                 foreach ($r as $stream) {

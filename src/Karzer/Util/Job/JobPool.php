@@ -2,7 +2,7 @@
 
 namespace Karzer\Util\Job;
 
-use Karzer\Framework\Exception;
+use Karzer\Exception\RuntimeException;
 use SplObjectStorage;
 use SplQueue;
 use SplFixedArray;
@@ -69,7 +69,7 @@ class JobPool implements IteratorAggregate, Countable
 
     /**
      * @param Job $job
-     * @throws \Karzer\Framework\Exception
+     * @throws \Karzer\Exception\FrameworkException
      */
     public function add(Job $job)
     {
@@ -88,7 +88,7 @@ class JobPool implements IteratorAggregate, Countable
 
     /**
      * @param Job $job
-     * @throws \Karzer\Framework\Exception
+     * @throws \Karzer\Exception\RuntimeException
      */
     protected function setPoolNumber(Job $job)
     {
@@ -100,12 +100,12 @@ class JobPool implements IteratorAggregate, Countable
                 return;
             }
         } while (++$position < $this->max);
-        throw new Exception('No free pool positions available');
+        throw new RuntimeException('No free pool positions available');
     }
 
     /**
      * @param Job $job
-     * @throws \Karzer\Framework\Exception
+     * @throws \Karzer\Exception\RuntimeException
      */
     protected function removePoolNumber(Job $job)
     {
@@ -115,7 +115,7 @@ class JobPool implements IteratorAggregate, Countable
                 return;
             }
         }
-        throw new Exception('Job has no pool position');
+        throw new RuntimeException('Job has no pool position');
     }
 
     /**

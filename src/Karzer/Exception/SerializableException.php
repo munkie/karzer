@@ -1,14 +1,13 @@
 <?php
 
-namespace Karzer\Framework;
+namespace Karzer\Exception;
 
-use Karzer\Framework\Exception as KarzerException;
 use Exception;
 use PHPUnit_Framework_TestFailure;
 use PHPUnit_Util_Filter;
 use PHPUnit_Framework_SelfDescribing;
 
-class SerializableException extends KarzerException implements PHPUnit_Framework_SelfDescribing
+class SerializableException extends FrameworkException implements PHPUnit_Framework_SelfDescribing
 {
     /**
      * @param Exception $e

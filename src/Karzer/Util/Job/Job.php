@@ -5,7 +5,6 @@ namespace Karzer\Util\Job;
 use Karzer\Framework\TestCase\JobTestInterface;
 use Karzer\Util\Process;
 use Text_Template;
-use PHPUnit_Framework_Test;
 use PHPUnit_Framework_TestResult;
 use ReflectionProperty;
 use Karzer\Util\Stream;
@@ -13,7 +12,7 @@ use Karzer\Util\Stream;
 class Job
 {
     /**
-     * @var \Text_Template
+     * @var Text_Template
      */
     protected $template;
 
@@ -23,7 +22,7 @@ class Job
     protected $test;
 
     /**
-     * @var \PHPUnit_Framework_TestResult
+     * @var PHPUnit_Framework_TestResult
      */
     protected $result;
 
@@ -63,7 +62,7 @@ class Job
     }
 
     /**
-     * @return \PHPUnit_Framework_TestResult
+     * @return PHPUnit_Framework_TestResult
      */
     public function getResult()
     {
@@ -71,7 +70,7 @@ class Job
     }
 
     /**
-     * @return \Text_Template
+     * @return Text_Template
      */
     public function getTemplate()
     {
@@ -139,7 +138,7 @@ class Job
 
     public function stop()
     {
-        return $this->getProcess()->close();
+        $this->getProcess()->close();
     }
 
     public function endTest()
@@ -163,7 +162,7 @@ class Job
     }
 
     /**
-     * @param resource $process
+     * @param Process $process
      */
     public function setProcess(Process $process)
     {

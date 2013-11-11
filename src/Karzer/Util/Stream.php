@@ -2,7 +2,7 @@
 
 namespace Karzer\Util;
 
-use Karzer\Framework\Exception;
+use Karzer\Exception\RuntimeException;
 
 class Stream
 {
@@ -27,12 +27,12 @@ class Stream
     /**
      * @param resource $resource
      * @param int $mode
-     * @throws \Karzer\Framework\Exception
+     * @throws \Karzer\Exception\RuntimeException
      */
     public function __construct($resource, $mode = null)
     {
         if (!is_resource($resource)) {
-            throw new Exception('Stream is not a resource');
+            throw new RuntimeException('Stream is not a resource');
         }
 
         $this->resource = $resource;
@@ -88,7 +88,6 @@ class Stream
 
     /**
      * @param string $string
-     * @param int $length
      * @return int
      */
     public function write($string)

@@ -2,7 +2,7 @@
 
 namespace Karzer\Tests\Functional;
 
-use Karzer\Framework\TestCase;
+use Karzer\Framework\TestCase\TestCase;
 
 class SampleTest extends TestCase
 {
@@ -43,4 +43,3 @@ class SampleTest extends TestCase
         throw new \Exception("I'm exception, bitch!");
     }
 }
- 

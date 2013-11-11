@@ -2,8 +2,8 @@
 
 namespace Karzer\Util;
 
-use Karzer\Framework\ErrorException;
-use Karzer\Framework\Exception;
+use Karzer\Exception\ErrorException;
+use Karzer\Exception\ForkException;
 
 class Process
 {
@@ -57,7 +57,7 @@ class Process
             ErrorException::restoreHandler();
         } catch (ErrorException $e) {
             ErrorException::restoreHandler();
-            throw new Exception('Failed to fork process', 0, $e);
+            throw new ForkException('Failed to fork process', 0, $e);
         }
 
         $this->stdin  = new Stream($pipes[0]);
@@ -65,9 +65,12 @@ class Process
         $this->stderr = new Stream($pipes[2], Stream::NON_BLOCKING_MODE);
     }
 
+    /**
+     * @return int
+     */
     public function close()
     {
-        proc_close($this->resource);
+        return proc_close($this->resource);
     }
 
     /**

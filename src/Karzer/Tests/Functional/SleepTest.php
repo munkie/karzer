@@ -2,7 +2,7 @@
 
 namespace Karzer\Tests\Functional;
 
-use Karzer\Framework\TestCase;
+use Karzer\Framework\TestCase\TestCase;
 
 class SleepTest extends TestCase
 {

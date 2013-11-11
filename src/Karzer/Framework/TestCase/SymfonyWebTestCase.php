@@ -2,7 +2,7 @@
 
 namespace Karzer\Framework\TestCase;
 
-use Karzer\Framework\SerializableException;
+use Karzer\Exception\SerializableException;
 use Karzer\Framework\TextTemplateYield;
 use Karzer\Karzer;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;

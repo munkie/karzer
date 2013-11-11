@@ -3,7 +3,7 @@
 namespace Karzer\Framework\TestCase;
 
 use Exception;
-use Karzer\Framework\SerializableException;
+use Karzer\Exception\SerializableException;
 use Karzer\Framework\TextTemplateYield;
 use Karzer\Util\Job\Job;
 use PHPUnit_Framework_TestResult;
