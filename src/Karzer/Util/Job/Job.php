@@ -2,12 +2,15 @@
 
 namespace Karzer\Util\Job;
 
+use Karzer\Exception\ForkException;
 use Karzer\Framework\TestCase\JobTestInterface;
 use Karzer\Util\Process;
 use Text_Template;
 use PHPUnit_Framework_TestResult;
 use ReflectionProperty;
 use Karzer\Util\Stream;
+use PHPUnit_Framework_Exception;
+use Exception;
 
 class Job
 {
@@ -118,8 +121,7 @@ class Job
     }
 
     /**
-     * Php executable
-     * @param string $php
+     * @param string $php Php executable
      */
     public function start($php)
     {
@@ -239,5 +241,25 @@ class Job
     public function getPoolPosition()
     {
         return $this->poolPosition;
+    }
+
+    /**
+     * @param PHPUnit_Framework_Exception|Exception|string $error
+     * @param int $time
+     */
+    public function addError($error, $time = 0)
+    {
+        if ($error instanceof PHPUnit_Framework_Exception) {
+            $exception = $error;
+        } elseif ($error instanceof Exception) {
+            $exception = new PHPUnit_Framework_Exception($error->getMessage(), 0, $error);
+        } else {
+            $exception = new PHPUnit_Framework_Exception($error);
+        }
+        $this->getResult()->addError(
+            $this->getTest(),
+            $exception,
+            $time
+        );
     }
 }

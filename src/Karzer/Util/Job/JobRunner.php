@@ -2,6 +2,7 @@
 
 namespace Karzer\Util\Job;
 
+use Karzer\Exception\ForkException;
 use Karzer\Exception\RuntimeException;
 use PHPUnit_Util_PHP_Default;
 use PHPUnit_Framework_Exception;
@@ -44,14 +45,24 @@ class JobRunner extends PHPUnit_Util_PHP_Default
 
     /**
      * @param Job $job
-     * @throws \PHPUnit_Framework_Exception
+     * @return bool
      */
     public function startJob(Job $job)
     {
         $this->pool->add($job);
 
-        $job->start($this->getPhpBinary());
+        try {
+            $job->start($this->getPhpBinary());
+        } catch (ForkException $e) {
+            $this->pool->remove($job);
+            $job->startTest();
+            $job->addError($e);
+            $job->endTest();
+            return false;
+        }
+
         $job->startTest();
+        return true;
     }
 
     /**
@@ -71,10 +82,12 @@ class JobRunner extends PHPUnit_Util_PHP_Default
                 $job->getStderr()->getBuffer()
             );
         } catch (ErrorException $e) {
-            $job->getResult()->addError(
-                $job->getTest(),
-                new PHPUnit_Framework_Exception($job->getStdout()->getBuffer(true), 0, $e),
-                0
+            $job->addError(
+                new PHPUnit_Framework_Exception(
+                    $job->getStdout()->getBuffer(true),
+                    0,
+                    $e
+                )
             );
         }
 
