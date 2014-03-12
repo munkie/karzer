@@ -4,9 +4,11 @@ namespace Karzer\Util\Job;
 
 use Karzer\Exception\ForkException;
 use Karzer\Exception\RuntimeException;
+use SebastianBergmann\Environment\Runtime;
 use PHPUnit_Util_PHP_Default;
 use PHPUnit_Framework_Exception;
 use ErrorException;
+use ReflectionObject;
 
 class JobRunner extends PHPUnit_Util_PHP_Default
 {
@@ -52,7 +54,8 @@ class JobRunner extends PHPUnit_Util_PHP_Default
         $this->pool->add($job);
 
         try {
-            $job->start($this->getPhpBinary());
+            $runtime = new Runtime();
+            $job->start($runtime->getBinary());
         } catch (ForkException $e) {
             $this->pool->remove($job);
             $job->startTest();
@@ -75,7 +78,11 @@ class JobRunner extends PHPUnit_Util_PHP_Default
         $job->stop();
 
         try {
-            $this->processChildResult(
+            $ref = new ReflectionObject($this);
+            $method = $ref->getMethod('processChildResult');
+            $method->setAccessible(true);
+
+            $method->invoke($this,
                 $job->getTest(),
                 $job->getResult(),
                 $job->getStdout()->getBuffer(),
