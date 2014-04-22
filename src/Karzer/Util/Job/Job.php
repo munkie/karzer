@@ -228,11 +228,12 @@ class Job
     }
 
     /**
-     * @param int $poolNumber
+     * @param int $poolPosition
      */
-    public function setPoolPosition($poolNumber)
+    public function setPoolPosition($poolPosition)
     {
-        $this->poolPosition = $poolNumber;
+        $this->poolPosition = $poolPosition;
+        $this->test->setPoolPosition($poolPosition);
     }
 
     /**
