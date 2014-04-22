@@ -15,12 +15,16 @@
         }
     ],
     "require": {
-        "phpunit/phpunit": "~4.0"
+        "phpunit/phpunit": "~4.0",
+        "munkie/phpunit-teamcity-testlistener": "dev-master"
     },
     "autoload": {
         "psr-0": {
             "Karzer\\": "src/"
-        }
+        },
+        "files": [
+            "src/Karzer/Util/Teamcity/TestListener.php"
+        ]
     },
     "bin": [
         "composer/bin/karzer"
