@@ -8,12 +8,12 @@ class SleepTest extends TestCase
 {
     /**
      * @dataProvider sleepProvider
-     * @param int $usec
+     * @param int $sec
      */
-    public function testSleep($usec)
+    public function testSleep($sec, $i)
     {
-        usleep($usec);
-        $this->assertTrue(true);
+        $this->assertEquals(0, sleep($sec));
+        echo "[$i:$sec]";
     }
 
     /**
@@ -22,11 +22,22 @@ class SleepTest extends TestCase
     public function sleepProvider()
     {
         return array(
-            array(1000000),
-            array(2000000),
-            array(1500000),
-            array(150000),
-            array(4000000),
+            array(8, 0),
+            array(4, 1),
+            array(2, 2),
+            array(1, 3),
+            array(8, 4),
+            array(4, 5),
+            array(2, 6),
+            array(1, 7),
+            array(8, 8),
+            array(4, 9),
+            array(2, 10),
+            array(1, 11),
+            array(8, 12),
+            array(4, 13),
+            array(2, 14),
+            array(1, 15),
         );
     }
 }
