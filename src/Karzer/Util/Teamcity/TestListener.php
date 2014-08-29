@@ -3,7 +3,6 @@
 namespace Karzer\Util\Teamcity;
 
 use Karzer\Framework\TestCase\JobTestInterface;
-use Karzer\Karzer;
 use PHPUnit\TeamCity\TestListener as TeamcityTestListener;
 use PHPUnit_Framework_Test;
 

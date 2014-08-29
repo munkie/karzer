@@ -60,7 +60,6 @@ class TestSuite extends PHPUnit_Framework_TestSuite
      * @param string|bool $filter
      * @param array $groups
      * @param array $excludeGroups
-     * @param bool $processIsolation
      * @return PHPUnit_Framework_TestResult
      * @throws \Karzer\Exception\RuntimeException
      */

@@ -2,14 +2,13 @@
 
 namespace Karzer\Util\Job;
 
-use Karzer\Exception\ForkException;
 use Karzer\Framework\TestCase\JobTestInterface;
 use Karzer\Util\Process;
-use Text_Template;
-use PHPUnit_Framework_TestResult;
-use ReflectionProperty;
 use Karzer\Util\Stream;
+use PHPUnit_Framework_TestResult;
 use PHPUnit_Framework_Exception;
+use Text_Template;
+use ReflectionProperty;
 use Exception;
 
 class Job
