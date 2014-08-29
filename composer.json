@@ -19,8 +19,8 @@
         "munkie/phpunit-teamcity-testlistener": "dev-master"
     },
     "autoload": {
-        "psr-0": {
-            "Karzer\\": "src/"
+        "psr-4": {
+            "Karzer\\": "src/Karzer/"
         },
         "files": [
             "src/Karzer/Util/Teamcity/TestListener.php"
