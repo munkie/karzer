@@ -156,6 +156,14 @@ class Job
         $this->test->unsetTestResultObject();
     }
 
+    /**
+     * @param float|int $time
+     */
+    public function resultEndTest($time = 0)
+    {
+        $this->getResult()->endTest($this->getTest(), $time);
+    }
+
     protected function backupErrorHandlerSettings()
     {
         if ($this->test->useErrorHandler()) {

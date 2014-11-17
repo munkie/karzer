@@ -7,6 +7,7 @@ use Karzer\Exception\RuntimeException;
 use SebastianBergmann\Environment\Runtime;
 use PHPUnit_Util_PHP_Default;
 use PHPUnit_Framework_Exception;
+use PHPUnit_Framework_SkippedTestError;
 use ErrorException;
 use ReflectionObject;
 
@@ -91,15 +92,16 @@ class JobRunner extends PHPUnit_Util_PHP_Default
      */
     protected function retryJob(Job $job)
     {
+        $job->setPoolPosition(null);
+        $job->incRetries();
+        $this->pool->enqueue($job);
+
         $job->addError(
-            new \PHPUnit_Framework_SkippedTestError(
+            new PHPUnit_Framework_SkippedTestError(
                 $job->getStderr()->getBuffer()
             )
         );
-
-        $job->setPoolPosition(null);
-        $this->pool->enqueue($job);
-        $job->incRetries();
+        $job->resultEndTest();
     }
 
     /**
