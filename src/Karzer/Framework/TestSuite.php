@@ -23,14 +23,15 @@ class TestSuite extends PHPUnit_Framework_TestSuite
     /**
      * @param PHPUnit_Framework_Test $testSuite
      * @param int $threads
+     * @param int $retry
      */
-    public function __construct(PHPUnit_Framework_Test $testSuite, $threads)
+    public function __construct(PHPUnit_Framework_Test $testSuite, $threads, $retry)
     {
         foreach ($this->getSuiteTests($testSuite) as $test) {
             $this->addTest($test);
         }
 
-        $this->runner = new JobRunner(new JobPool($threads));
+        $this->runner = new JobRunner(new JobPool($threads), $retry);
     }
 
     /**

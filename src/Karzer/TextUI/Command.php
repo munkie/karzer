@@ -13,6 +13,8 @@ class Command extends PHPUnit_TextUI_Command
     {
         $this->longOptions['threads='] = 'handleThreads';
         $this->arguments['threads'] = 2;
+        $this->longOptions['retry='] = 'handleRetry';
+        $this->arguments['retry'] = 0;
         $this->arguments['processIsolation'] = true;
     }
 
@@ -39,6 +41,18 @@ class Command extends PHPUnit_TextUI_Command
     }
 
     /**
+     * @param string $value
+     * @throws \PHPUnit_Framework_Exception
+     */
+    protected function handleRetry($value)
+    {
+        if ((string) (int) $value !== (string) $value) {
+            throw PHPUnit_Util_InvalidArgumentHelper::factory(1, 'integer');
+        }
+        $this->arguments['retry'] = (int) $value;
+    }
+
+    /**
      * @param array $argv
      */
     protected function handleArguments(array $argv)
@@ -62,6 +76,6 @@ class Command extends PHPUnit_TextUI_Command
                 $this->arguments['testSuffixes']
             );
         }
-        return new TestSuite($suite, $this->arguments['threads']);
+        return new TestSuite($suite, $this->arguments['threads'], $this->arguments['retry']);
     }
 }

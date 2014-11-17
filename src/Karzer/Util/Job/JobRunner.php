@@ -23,11 +23,18 @@ class JobRunner extends PHPUnit_Util_PHP_Default
     protected $timeout = null;
 
     /**
-     * @param JobPool $pool
+     * @var int
      */
-    public function __construct(JobPool $pool)
+    protected $retry;
+
+    /**
+     * @param JobPool $pool
+     * @param int $retry
+     */
+    public function __construct(JobPool $pool, $retry = 0)
     {
         $this->pool = $pool;
+        $this->retry = $retry;
     }
 
     /**
@@ -70,18 +77,38 @@ class JobRunner extends PHPUnit_Util_PHP_Default
 
         $job->stop();
 
-        try {
-            $reflectionObject = new ReflectionObject($this);
-            $method = $reflectionObject->getMethod('processChildResult');
-            $method->setAccessible(true);
+        if (!$job->isStderrEmpty() && $job->getRetries() < $this->retry) {
+            $this->retryJob($job);
+        } else {
+            $this->processJobResult($job);
+        }
 
-            $method->invoke(
-                $this,
-                $job->getTest(),
-                $job->getResult(),
-                $job->getStdout()->getBuffer(),
+        $job->endTest();
+    }
+
+    /**
+     * @param Job $job
+     */
+    protected function retryJob(Job $job)
+    {
+        $job->addError(
+            new \PHPUnit_Framework_SkippedTestError(
                 $job->getStderr()->getBuffer()
-            );
+            )
+        );
+
+        $job->setPoolPosition(null);
+        $this->pool->enqueue($job);
+        $job->incRetries();
+    }
+
+    /**
+     * @param Job $job
+     */
+    protected function processJobResult(Job $job)
+    {
+        try {
+            $this->doProcessChildResult($job);
         } catch (ErrorException $e) {
             $job->addError(
                 new PHPUnit_Framework_Exception(
@@ -91,8 +118,25 @@ class JobRunner extends PHPUnit_Util_PHP_Default
                 )
             );
         }
+    }
 
-        $job->endTest();
+    /**
+     * @see PHPUnit_Util_PHP_Default::processChildResult
+     * @param Job $job
+     */
+    protected function doProcessChildResult(Job $job)
+    {
+        $reflectionObject = new ReflectionObject($this);
+        $method = $reflectionObject->getMethod('processChildResult');
+        $method->setAccessible(true);
+
+        $method->invoke(
+            $this,
+            $job->getTest(),
+            $job->getResult(),
+            $job->getStdout()->getBuffer(),
+            $job->getStderr()->getBuffer()
+        );
     }
 
     /**

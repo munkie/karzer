@@ -49,6 +49,11 @@ class Job
     protected $render;
 
     /**
+     * @var int
+     */
+    protected $retries = 0;
+
+    /**
      * @param Text_Template $template
      * @param JobTestInterface $test
      * @param PHPUnit_Framework_TestResult $result
@@ -137,9 +142,12 @@ class Job
         $this->backupErrorHandlerSettings();
     }
 
+    /**
+     * @return int
+     */
     public function stop()
     {
-        $this->getProcess()->close();
+        return $this->getProcess()->close();
     }
 
     public function endTest()
@@ -227,6 +235,14 @@ class Job
     }
 
     /**
+     * @return bool
+     */
+    public function isStderrEmpty()
+    {
+        return '' === $this->getStderr()->getBuffer();
+    }
+
+    /**
      * @param int $poolPosition
      */
     public function setPoolPosition($poolPosition)
@@ -261,5 +277,21 @@ class Job
             $exception,
             $time
         );
+    }
+
+    /**
+     * @return int
+     */
+    public function getRetries()
+    {
+        return $this->retries;
+    }
+
+    /**
+     * @return int
+     */
+    public function incRetries()
+    {
+        return $this->retries++;
     }
 }
