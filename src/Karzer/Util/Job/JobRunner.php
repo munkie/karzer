@@ -4,9 +4,11 @@ namespace Karzer\Util\Job;
 
 use Karzer\Exception\ForkException;
 use Karzer\Exception\RuntimeException;
+use SebastianBergmann\Environment\Runtime;
 use PHPUnit_Util_PHP_Default;
 use PHPUnit_Framework_Exception;
 use ErrorException;
+use ReflectionObject;
 
 class JobRunner extends PHPUnit_Util_PHP_Default
 {
@@ -16,18 +18,16 @@ class JobRunner extends PHPUnit_Util_PHP_Default
     protected $pool;
 
     /**
-     * @var int stream_select timeout
+     * @var int|null stream_select timeout in usec
      */
     protected $timeout = null;
 
     /**
      * @param JobPool $pool
-     * @param null $timeout
      */
-    public function __construct(JobPool $pool, $timeout = null)
+    public function __construct(JobPool $pool)
     {
         $this->pool = $pool;
-        $this->timeout = $timeout;
     }
 
     /**
@@ -36,11 +36,6 @@ class JobRunner extends PHPUnit_Util_PHP_Default
     public function enqueueJob(Job $job)
     {
         $this->pool->enqueue($job);
-    }
-
-    public function dequeueJob()
-    {
-        return $this->pool->dequeue();
     }
 
     /**
@@ -52,7 +47,8 @@ class JobRunner extends PHPUnit_Util_PHP_Default
         $this->pool->add($job);
 
         try {
-            $job->start($this->getPhpBinary());
+            $runtime = new Runtime();
+            $job->start($runtime->getBinary());
         } catch (ForkException $e) {
             $this->pool->remove($job);
             $job->startTest();
@@ -75,7 +71,12 @@ class JobRunner extends PHPUnit_Util_PHP_Default
         $job->stop();
 
         try {
-            $this->processChildResult(
+            $reflectionObject = new ReflectionObject($this);
+            $method = $reflectionObject->getMethod('processChildResult');
+            $method->setAccessible(true);
+
+            $method->invoke(
+                $this,
                 $job->getTest(),
                 $job->getResult(),
                 $job->getStdout()->getBuffer(),
@@ -119,10 +120,12 @@ class JobRunner extends PHPUnit_Util_PHP_Default
             $x = array();
 
             if (count($r) > 0) {
-                $result = stream_select($r, $w, $x, $this->timeout);
+                $result = stream_select($r, $w, $x, null, $this->timeout);
 
                 if (false === $result) {
                     throw new RuntimeException('Stream select failed');
+                } elseif (0 === $result) {
+                    continue;
                 }
 
                 foreach ($r as $stream) {

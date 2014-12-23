@@ -60,7 +60,6 @@ class TestSuite extends PHPUnit_Framework_TestSuite
      * @param string|bool $filter
      * @param array $groups
      * @param array $excludeGroups
-     * @param bool $processIsolation
      * @return PHPUnit_Framework_TestResult
      * @throws \Karzer\Exception\RuntimeException
      */
@@ -68,8 +67,7 @@ class TestSuite extends PHPUnit_Framework_TestSuite
         PHPUnit_Framework_TestResult $result = null,
         $filter = false,
         array $groups = array(),
-        array $excludeGroups = array(),
-        $processIsolation = false
+        array $excludeGroups = array()
     ) {
         if ($result === null) {
             $result = $this->createResult();
@@ -88,10 +86,8 @@ class TestSuite extends PHPUnit_Framework_TestSuite
             if ($runTest) {
                 if ($test instanceof PHPUnit_Framework_TestCase) {
                     $test->setBackupGlobals($this->backupGlobals);
-                    $test->setBackupStaticAttributes(
-                        $this->backupStaticAttributes
-                    );
-                    $test->setRunTestInSeparateProcess($processIsolation);
+                    $test->setBackupStaticAttributes($this->backupStaticAttributes);
+                    $test->setRunTestInSeparateProcess($this->runTestInSeparateProcess);
                 }
 
                 if (!$test instanceof JobTestInterface) {
