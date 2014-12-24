@@ -90,19 +90,15 @@ class TestSuite extends PHPUnit_Framework_TestSuite
                     $test->setRunTestInSeparateProcess($this->runTestInSeparateProcess);
                 }
 
-                if (!$test instanceof JobTestInterface) {
-                    throw new RuntimeException(
-                        sprintf(
-                            'Test must implement JobTestInterface to be run by karzer - %s',
-                            PHPUnit_Util_Test::describe($test)
-                        )
-                    );
-                } elseif (!$test->runTestInSeparateProcess()) {
+                $testDecorator = new TestDecorator($test);
+                $testDecorator->init($result);
+
+                if (!$testDecorator->runTestInSeparateProcess()) {
                     throw new RuntimeException('Tests must by run in process isolation mode');
-                } else {
-                    $job = $test->createJob($result);
-                    $this->runner->enqueueJob($job);
                 }
+
+                $job = $testDecorator->createJob($result);
+                $this->runner->enqueueJob($job);
             }
         }
 

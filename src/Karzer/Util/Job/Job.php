@@ -3,6 +3,7 @@
 namespace Karzer\Util\Job;
 
 use Karzer\Framework\TestCase\JobTestInterface;
+use Karzer\Framework\TestDecorator;
 use Karzer\Util\Process;
 use Karzer\Util\Stream;
 use PHPUnit_Framework_TestResult;
@@ -19,7 +20,7 @@ class Job
     protected $template;
 
     /**
-     * @var JobTestInterface
+     * @var JobTestInterface|TestDecorator
      */
     protected $test;
 
@@ -84,7 +85,7 @@ class Job
      */
     public function getTest()
     {
-        return $this->test;
+        return $this->test->getTest();
     }
 
     /**
@@ -93,7 +94,7 @@ class Job
     public function render()
     {
         if (null === $this->render) {
-            $this->modifyTemplate();
+            //$this->modifyTemplate();
             $this->render = $this->template->render();
         }
         return $this->render;
