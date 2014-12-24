@@ -3,7 +3,7 @@
 namespace Karzer\Framework;
 
 use Karzer\Exception\RuntimeException;
-use Karzer\Framework\TestCase\JobTestInterface;
+use Karzer\Framework\JobTestInterface;
 use Karzer\Util\Job\JobPool;
 use Karzer\Util\Job\JobRunner;
 use PHPUnit_Framework_Test;

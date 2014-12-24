@@ -2,7 +2,7 @@
 
 namespace Karzer\Util\Job;
 
-use Karzer\Framework\TestCase\JobTestInterface;
+use Karzer\Framework\JobTestInterface;
 use Karzer\Framework\TestDecorator;
 use Karzer\Util\Process;
 use Karzer\Util\Stream;
@@ -51,7 +51,7 @@ class Job
 
     /**
      * @param Text_Template $template
-     * @param JobTestInterface $test
+     * @param \Karzer\Framework\JobTestInterface $test
      * @param PHPUnit_Framework_TestResult $result
      */
     public function __construct(
@@ -81,7 +81,7 @@ class Job
     }
 
     /**
-     * @return JobTestInterface
+     * @return \Karzer\Framework\JobTestInterface
      */
     public function getTest()
     {

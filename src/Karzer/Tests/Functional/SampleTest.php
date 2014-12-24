@@ -2,9 +2,7 @@
 
 namespace Karzer\Tests\Functional;
 
-use Karzer\Framework\TestCase\TestCase;
-
-class SampleTest extends TestCase
+class SampleTest extends \PHPUnit_Framework_TestCase
 {
     public function testEquals()
     {

@@ -2,9 +2,7 @@
 
 namespace Karzer\Tests\Functional;
 
-use Karzer\Framework\TestCase\TestCase;
-
-class SleepTest extends TestCase
+class SleepTest extends \PHPUnit_Framework_TestCase
 {
     /**
      * @dataProvider sleepProvider

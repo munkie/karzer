@@ -2,7 +2,7 @@
 
 namespace Karzer\Framework;
 
-use Karzer\Framework\TestCase\JobTestInterface;
+use Karzer\Framework\JobTestInterface;
 use Karzer\Util\Job\Job;
 use PHPUnit_Framework_TestResult;
 
