@@ -85,7 +85,7 @@ class Job
      */
     public function getTest()
     {
-        return $this->test->getTest();
+        return $this->test;
     }
 
     /**
@@ -94,30 +94,9 @@ class Job
     public function render()
     {
         if (null === $this->render) {
-            //$this->modifyTemplate();
-            $this->render = $this->template->render();
+            $this->render = $this->test->createTemplate()->render();
         }
         return $this->render;
-    }
-
-    /**
-     * XXX dirty hack of template
-     */
-    protected function modifyTemplate()
-    {
-        $property = new ReflectionProperty($this->template, 'template');
-        $property->setAccessible(true);
-        $template = $property->getValue($this->template);
-
-        $modifiedTemplate = str_replace(
-            "\$test->setInIsolation(TRUE);\n",
-            "\$test->setInIsolation(TRUE);\n    \$test->setPoolPosition({poolPosition});\n",
-            $template
-        );
-
-        $property->setValue($this->template, $modifiedTemplate);
-
-        $this->template->setVar(array('poolPosition' => $this->getPoolPosition()));
     }
 
     /**

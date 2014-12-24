@@ -26,6 +26,16 @@ class TestDecorator extends \PHPUnit_Extensions_TestDecorator implements JobTest
     protected $templateFile;
 
     /**
+     * @param string $name
+     * @param array $args
+     * @return mixed
+     */
+    public function __call($name, array $args = array())
+    {
+        return call_user_func_array(array($this->test, $name), $args);
+    }
+
+    /**
      * Copy-paste of test init code from TestCase::run method
      *
      * @param PHPUnit_Framework_TestResult $result
@@ -62,7 +72,7 @@ class TestDecorator extends \PHPUnit_Extensions_TestDecorator implements JobTest
      *
      * @return \Text_Template
      */
-    protected function createTemplate()
+    public function createTemplate()
     {
         $result = $this->test->getTestResultObject();
 
@@ -87,6 +97,10 @@ class TestDecorator extends \PHPUnit_Extensions_TestDecorator implements JobTest
             $includedFiles = '';
             $iniSettings   = '';
         }
+
+        //
+        $globals = $this->tweakGlobals($globals);
+        //
 
         $coverage                                = $result->getCollectCodeCoverageInformation()       ? 'true' : 'false';
         $isStrictAboutTestsThatDoNotTestAnything = $result->isStrictAboutTestsThatDoNotTestAnything() ? 'true' : 'false';
@@ -242,5 +256,40 @@ class TestDecorator extends \PHPUnit_Extensions_TestDecorator implements JobTest
         $method = new \ReflectionMethod('PHPUnit_Framework_TestCase', $methodName);
         $method->setAccessible(true);
         $method->invokeArgs($this->test, $args);
+    }
+
+    /**
+     * @param string $globals
+     * @return string
+     */
+    protected function tweakGlobals($globals)
+    {
+        $globals .= $this->createGlobalString('_SERVER', 'KARZER_THREAD', $this->getPoolPosition());
+        // override script path in argv to avoid
+        // RuntimeException('You must override the KernelTestCase::createKernel() method.')
+        // in Symfony\Bundle\FrameworkBundle\Test\KernelTestCase::getPhpUnitXmlDir()
+        $argv = $_SERVER['argv'];
+        $argv[0] = preg_replace('/karzer$/', 'phpunit', $argv[0]);
+        $globals.= $this->createGlobalString('_SERVER', 'argv', $argv);
+        $globals.= $this->createGlobalString(null, 'argv', $argv);
+
+        return $globals;
+    }
+
+    /**
+     * @param string $globalArray
+     * @param string $key
+     * @param mixed $value
+     * @return string
+     */
+    protected function createGlobalString($globalArray, $key, $value)
+    {
+        $pattern = (null !== $globalArray) ? '$GLOBALS[\'%3$s\'][\'%1$s\'] = %2$s;' : '$GLOBALS[\'%1$s\'] = %2$s;';
+        return sprintf(
+            $pattern . "\n",
+            $key,
+            var_export($value, true),
+            $globalArray
+        );
     }
 }
