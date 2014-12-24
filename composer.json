@@ -27,6 +27,6 @@
         ]
     },
     "bin": [
-        "composer/bin/karzer"
+        "bin/karzer"
     ]
 }
