@@ -13,17 +13,13 @@
         >
     <testsuites>
         <testsuite name="Karzer">
-            <directory>./src/Karzer/Tests</directory>
+            <directory>./tests/</directory>
         </testsuite>
     </testsuites>
 
     <filter>
         <whitelist>
-            <directory>./</directory>
-            <exclude>
-                <directory>./vendor</directory>
-                <directory>./src/Karzer/Tests</directory>
-            </exclude>
+            <directory>./src</directory>
         </whitelist>
     </filter>
 

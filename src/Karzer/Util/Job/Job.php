@@ -5,16 +5,11 @@ namespace Karzer\Util\Job;
 use Karzer\Framework\TestCase\JobTestInterface;
 use Karzer\Util\Process;
 use Karzer\Util\Stream;
-use PHPUnit_Framework_TestResult;
-use PHPUnit_Framework_Exception;
-use Text_Template;
-use ReflectionProperty;
-use Exception;
 
 class Job
 {
     /**
-     * @var Text_Template
+     * @var \Text_Template
      */
     protected $template;
 
@@ -24,7 +19,7 @@ class Job
     protected $test;
 
     /**
-     * @var PHPUnit_Framework_TestResult
+     * @var \PHPUnit_Framework_TestResult
      */
     protected $result;
 
@@ -49,14 +44,14 @@ class Job
     protected $render;
 
     /**
-     * @param Text_Template $template
+     * @param \Text_Template $template
      * @param JobTestInterface $test
-     * @param PHPUnit_Framework_TestResult $result
+     * @param \PHPUnit_Framework_TestResult $result
      */
     public function __construct(
-        Text_Template $template,
+        \Text_Template $template,
         JobTestInterface $test,
-        PHPUnit_Framework_TestResult $result
+        \PHPUnit_Framework_TestResult $result
     ) {
         $this->template = $template;
         $this->test = $test;
@@ -64,7 +59,7 @@ class Job
     }
 
     /**
-     * @return PHPUnit_Framework_TestResult
+     * @return \PHPUnit_Framework_TestResult
      */
     public function getResult()
     {
@@ -72,7 +67,7 @@ class Job
     }
 
     /**
-     * @return Text_Template
+     * @return \Text_Template
      */
     public function getTemplate()
     {
@@ -104,7 +99,7 @@ class Job
      */
     protected function modifyTemplate()
     {
-        $property = new ReflectionProperty($this->template, 'template');
+        $property = new \ReflectionProperty($this->template, 'template');
         $property->setAccessible(true);
         $template = $property->getValue($this->template);
 
@@ -244,17 +239,17 @@ class Job
     }
 
     /**
-     * @param PHPUnit_Framework_Exception|Exception|string $error
+     * @param \PHPUnit_Framework_Exception|\Exception|string $error
      * @param int $time
      */
     public function addError($error, $time = 0)
     {
-        if ($error instanceof PHPUnit_Framework_Exception) {
+        if ($error instanceof \PHPUnit_Framework_Exception) {
             $exception = $error;
-        } elseif ($error instanceof Exception) {
-            $exception = new PHPUnit_Framework_Exception($error->getMessage(), 0, $error);
+        } elseif ($error instanceof \Exception) {
+            $exception = new \PHPUnit_Framework_Exception($error->getMessage(), 0, $error);
         } else {
-            $exception = new PHPUnit_Framework_Exception($error);
+            $exception = new \PHPUnit_Framework_Exception($error);
         }
         $this->getResult()->addError(
             $this->getTest(),

@@ -3,11 +3,8 @@
 namespace Karzer\TextUI;
 
 use Karzer\Framework\TestSuite;
-use PHPUnit_TextUI_Command;
-use PHPUnit_Framework_TestSuite;
-use PHPUnit_Util_InvalidArgumentHelper;
 
-class Command extends PHPUnit_TextUI_Command
+class Command extends \PHPUnit_TextUI_Command
 {
     public function __construct()
     {
@@ -17,23 +14,13 @@ class Command extends PHPUnit_TextUI_Command
     }
 
     /**
-     * @param bool $exit
-     * @return int
-     */
-    public static function main($exit = true)
-    {
-        $command = new self;
-        return $command->run($_SERVER['argv'], $exit);
-    }
-
-    /**
      * @param string $value
      * @throws \PHPUnit_Framework_Exception
      */
     protected function handleThreads($value)
     {
         if ((string) (int) $value !== (string) $value) {
-            throw PHPUnit_Util_InvalidArgumentHelper::factory(1, 'integer');
+            throw \PHPUnit_Util_InvalidArgumentHelper::factory(1, 'integer');
         }
         $this->arguments['threads'] = (int) $value;
     }
@@ -53,7 +40,7 @@ class Command extends PHPUnit_TextUI_Command
      */
     protected function createTestSuite()
     {
-        if (isset($this->arguments['test']) && $this->arguments['test'] instanceof PHPUnit_Framework_TestSuite) {
+        if (isset($this->arguments['test']) && $this->arguments['test'] instanceof \PHPUnit_Framework_TestSuite) {
             $suite = $this->arguments['test'];
         } else {
             $suite = $this->createRunner()->getTest(

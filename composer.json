@@ -15,18 +15,20 @@
         }
     ],
     "require": {
-        "phpunit/phpunit": "~4.0",
-        "munkie/phpunit-teamcity-testlistener": "~1.0"
+        "php": "^5.6 || ^7.0",
+        "phpunit/phpunit": "^5.7"
     },
     "autoload": {
         "psr-4": {
             "Karzer\\": "src/Karzer/"
-        },
-        "files": [
-            "src/Karzer/Util/Teamcity/TestListener.php"
-        ]
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Karzer\\Tests\\": "tests/"
+        }
     },
     "bin": [
-        "composer/bin/karzer"
+        "karzer"
     ]
 }

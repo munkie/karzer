@@ -5,12 +5,8 @@ namespace Karzer\Util\Job;
 use Karzer\Exception\ForkException;
 use Karzer\Exception\RuntimeException;
 use SebastianBergmann\Environment\Runtime;
-use PHPUnit_Util_PHP_Default;
-use PHPUnit_Framework_Exception;
-use ErrorException;
-use ReflectionObject;
 
-class JobRunner extends PHPUnit_Util_PHP_Default
+class JobRunner extends \PHPUnit_Util_PHP_Default
 {
     /**
      * @var JobPool|Job[]
@@ -71,7 +67,7 @@ class JobRunner extends PHPUnit_Util_PHP_Default
         $job->stop();
 
         try {
-            $reflectionObject = new ReflectionObject($this);
+            $reflectionObject = new \ReflectionObject($this);
             $method = $reflectionObject->getMethod('processChildResult');
             $method->setAccessible(true);
 
@@ -82,9 +78,9 @@ class JobRunner extends PHPUnit_Util_PHP_Default
                 $job->getStdout()->getBuffer(),
                 $job->getStderr()->getBuffer()
             );
-        } catch (ErrorException $e) {
+        } catch (\ErrorException $e) {
             $job->addError(
-                new PHPUnit_Framework_Exception(
+                new \PHPUnit_Framework_Exception(
                     $job->getStdout()->getBuffer(true),
                     0,
                     $e

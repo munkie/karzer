@@ -107,7 +107,7 @@ class Stream
      */
     public function getBuffer($trim = false)
     {
-        return ($trim) ? trim($this->buffer) : $this->buffer;
+        return $trim ? trim($this->buffer) : $this->buffer;
     }
 
     /**

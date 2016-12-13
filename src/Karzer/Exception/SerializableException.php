@@ -2,27 +2,22 @@
 
 namespace Karzer\Exception;
 
-use Exception;
-use PHPUnit_Framework_TestFailure;
-use PHPUnit_Util_Filter;
-use PHPUnit_Framework_SelfDescribing;
-
-class SerializableException extends FrameworkException implements PHPUnit_Framework_SelfDescribing
+class SerializableException extends FrameworkException implements \PHPUnit_Framework_SelfDescribing
 {
     /**
-     * @param Exception $e
+     * @param \Exception $e
      */
-    public function __construct(Exception $e)
+    public function __construct(\Exception $e)
     {
         $message = $this->formatMessage($e);
         parent::__construct($message);
     }
 
     /**
-     * @param Exception $e
+     * @param \Exception $e
      * @return string
      */
-    protected function formatMessage(Exception $e)
+    protected function formatMessage(\Exception $e)
     {
         $message = '';
 
@@ -30,8 +25,8 @@ class SerializableException extends FrameworkException implements PHPUnit_Framew
 
             $message.= ($message) ? "\nCaused by\n" : '';
 
-            $message.= PHPUnit_Framework_TestFailure::exceptionToString($e). "\n";
-            $message.= PHPUnit_Util_Filter::getFilteredStacktrace($e);
+            $message.= \PHPUnit_Framework_TestFailure::exceptionToString($e). "\n";
+            $message.= \PHPUnit_Util_Filter::getFilteredStacktrace($e);
 
             $e = $e->getPrevious();
         }
@@ -58,14 +53,14 @@ class SerializableException extends FrameworkException implements PHPUnit_Framew
     }
 
     /**
-     * @param Exception $e
-     * @return Exception|SerializableException
+     * @param \Exception $e
+     * @return \Exception|SerializableException
      */
-    public static function factory(Exception $e)
+    public static function factory(\Exception $e)
     {
         try {
             serialize($e);
-        } catch (Exception $serializeException) {
+        } catch (\Exception $serializeException) {
             $e = new static($e);
         }
         return $e;

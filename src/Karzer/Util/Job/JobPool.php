@@ -3,14 +3,8 @@
 namespace Karzer\Util\Job;
 
 use Karzer\Exception\RuntimeException;
-use SplObjectStorage;
-use SplQueue;
-use SplFixedArray;
-use IteratorAggregate;
-use Traversable;
-use Countable;
 
-class JobPool implements IteratorAggregate, Countable
+class JobPool implements \IteratorAggregate, \Countable
 {
     /**
      * @var int max number of pools
@@ -18,17 +12,17 @@ class JobPool implements IteratorAggregate, Countable
     protected $max;
 
     /**
-     * @var SplQueue|Job[]
+     * @var \SplQueue|Job[]
      */
     protected $queue;
 
     /**
-     * @var SplObjectStorage|Job[]
+     * @var \SplObjectStorage|Job[]
      */
     protected $jobs;
 
     /**
-     * @var SplFixedArray|Job[]
+     * @var \SplFixedArray|Job[]
      */
     protected $positions;
 
@@ -38,9 +32,9 @@ class JobPool implements IteratorAggregate, Countable
     public function __construct($max)
     {
         $this->max = (int) $max;
-        $this->jobs = new SplObjectStorage();
-        $this->queue = new SplQueue();
-        $this->positions = new SplFixedArray($this->max);
+        $this->jobs = new \SplObjectStorage();
+        $this->queue = new \SplQueue();
+        $this->positions = new \SplFixedArray($this->max);
     }
 
     /**
@@ -144,7 +138,7 @@ class JobPool implements IteratorAggregate, Countable
     }
 
     /**
-     * @return SplObjectStorage|Traversable
+     * @return Job[]|\Traversable
      */
     public function getIterator()
     {

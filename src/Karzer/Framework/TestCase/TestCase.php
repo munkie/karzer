@@ -2,16 +2,11 @@
 
 namespace Karzer\Framework\TestCase;
 
-use Exception;
 use Karzer\Exception\SerializableException;
 use Karzer\Framework\TextTemplateYield;
 use Karzer\Util\Job\Job;
-use PHPUnit_Framework_TestResult;
-use PHPUnit_Framework_TestCase;
-use Text_Template;
-use ReflectionProperty;
 
-abstract class TestCase extends PHPUnit_Framework_TestCase implements JobTestInterface
+abstract class TestCase extends \PHPUnit_Framework_TestCase implements JobTestInterface
 {
     /**
      * @var int
@@ -50,10 +45,10 @@ abstract class TestCase extends PHPUnit_Framework_TestCase implements JobTestInt
     }
 
     /**
-     * @param PHPUnit_Framework_TestResult $result
+     * @param \PHPUnit_Framework_TestResult $result
      * @return Job
      */
-    public function createJob(PHPUnit_Framework_TestResult $result)
+    public function createJob(\PHPUnit_Framework_TestResult $result)
     {
         try {
             $this->yieldTemplate = true;
@@ -64,10 +59,10 @@ abstract class TestCase extends PHPUnit_Framework_TestCase implements JobTestInt
     }
 
     /**
-     * @param Text_Template $template
+     * @param \Text_Template $template
      * @throws TextTemplateYield
      */
-    protected function prepareTemplate(Text_Template $template)
+    protected function prepareTemplate(\Text_Template $template)
     {
         if ($this->yieldTemplate) {
             $this->yieldTemplate = false;
@@ -81,7 +76,7 @@ abstract class TestCase extends PHPUnit_Framework_TestCase implements JobTestInt
     public function unsetTestResultObject()
     {
         // Dirty hack to unset private property
-        $property = new ReflectionProperty('PHPUnit_Framework_TestCase', 'result');
+        $property = new \ReflectionProperty('PHPUnit_Framework_TestCase', 'result');
         $property->setAccessible(true);
         $property->setValue($this, null);
     }
@@ -92,7 +87,7 @@ abstract class TestCase extends PHPUnit_Framework_TestCase implements JobTestInt
     public function useErrorHandler()
     {
         // XXX Dirty hack to get useErrorHandler private property value
-        $property = new ReflectionProperty('PHPUnit_Framework_TestCase', 'useErrorHandler');
+        $property = new \ReflectionProperty('PHPUnit_Framework_TestCase', 'useErrorHandler');
         $property->setAccessible(true);
         $value = $property->getValue($this);
         return null !== $value;
@@ -104,16 +99,16 @@ abstract class TestCase extends PHPUnit_Framework_TestCase implements JobTestInt
     public function isInIsolation()
     {
         // XXX Dirty hack to get inIsolation private property value
-        $property = new ReflectionProperty('PHPUnit_Framework_TestCase', 'inIsolation');
+        $property = new \ReflectionProperty('PHPUnit_Framework_TestCase', 'inIsolation');
         $property->setAccessible(true);
         $value = $property->getValue($this);
         return (bool) $value;
     }
 
     /**
-     * @param Exception $e
+     * @param \Exception $e
      */
-    protected function onNotSuccessfulTest(Exception $e)
+    protected function onNotSuccessfulTest($e)
     {
         if ($this->isInIsolation()) {
             $e = SerializableException::factory($e);
