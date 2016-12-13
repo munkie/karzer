@@ -1,6 +1,6 @@
 <?php
 
-namespace Karzer\Util\Job;
+namespace Karzer\Job;
 
 use Karzer\Exception\ForkException;
 use Karzer\Exception\RuntimeException;

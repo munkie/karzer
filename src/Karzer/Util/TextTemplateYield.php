@@ -1,6 +1,6 @@
 <?php
 
-namespace Karzer\Framework;
+namespace Karzer\Util;
 
 class TextTemplateYield extends \Exception
 {

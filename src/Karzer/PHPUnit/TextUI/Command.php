@@ -1,8 +1,8 @@
 <?php
 
-namespace Karzer\TextUI;
+namespace Karzer\PHPUnit\TextUI;
 
-use Karzer\Framework\TestSuite;
+use Karzer\PHPUnit\Framework\TestSuite;
 
 class Command extends \PHPUnit_TextUI_Command
 {

@@ -1,8 +1,7 @@
 <?php
 
-namespace Karzer\Util\Job;
+namespace Karzer\Job;
 
-use Karzer\Framework\TestCase\JobTestInterface;
 use Karzer\Util\Process;
 use Karzer\Util\Stream;
 

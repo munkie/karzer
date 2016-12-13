@@ -1,11 +1,11 @@
 <?php
 
-namespace Karzer\Framework;
+namespace Karzer\PHPUnit\Framework;
 
 use Karzer\Exception\RuntimeException;
-use Karzer\Framework\TestCase\JobTestInterface;
-use Karzer\Util\Job\JobPool;
-use Karzer\Util\Job\JobRunner;
+use Karzer\Job\JobTestInterface;
+use Karzer\Job\JobPool;
+use Karzer\Job\JobRunner;
 use SplObjectStorage;
 
 class TestSuite extends \PHPUnit_Framework_TestSuite

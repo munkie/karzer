@@ -1,7 +1,6 @@
 <?php
-namespace Karzer\Framework\TestCase;
 
-use Karzer\Util\Job\Job;
+namespace Karzer\Job;
 
 interface JobTestInterface extends \PHPUnit_Framework_Test
 {

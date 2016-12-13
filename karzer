@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 
-use Karzer\TextUI\Command;
+use Karzer\PHPUnit\TextUI\Command;
 
 define('PHPUnit_MAIN_METHOD', 'PHPUnit_TextUI_Command::main');
 

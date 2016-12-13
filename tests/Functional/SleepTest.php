@@ -2,7 +2,7 @@
 
 namespace Karzer\Tests\Functional;
 
-use Karzer\Framework\TestCase\TestCase;
+use Karzer\PHPUnit\Framework\TestCase;
 
 class SleepTest extends TestCase
 {
