@@ -122,7 +122,7 @@ class JobPool implements \IteratorAggregate, \Countable
             $streams[] = $job->getOpenStreams();
         }
 
-        return array_merge(...$streams);
+        return count($streams) > 0 ? array_merge(...$streams) : [];
     }
 
     /**

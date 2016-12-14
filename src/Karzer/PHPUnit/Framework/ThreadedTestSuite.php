@@ -67,7 +67,7 @@ class ThreadedTestSuite extends \PHPUnit_Framework_TestSuite
             $tests[] = $this->getSuiteTests($test);
         }
 
-        return array_merge(...$tests);
+        return count($tests) > 0 ? array_merge(...$tests) : [];
     }
 
     /**
