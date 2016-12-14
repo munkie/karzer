@@ -3,8 +3,10 @@
 namespace Karzer\PHPUnit\TextUI;
 
 use Karzer\Job\JobFactory;
+use Karzer\Job\JobPool;
 use Karzer\Job\JobRunner;
 use Karzer\PHPUnit\Framework\TestSuite;
+use Karzer\PHPUnit\Util\ResultProcessor;
 
 class Command extends \PHPUnit_TextUI_Command
 {
@@ -52,8 +54,10 @@ class Command extends \PHPUnit_TextUI_Command
             );
         }
 
-        $runner = JobRunner::fromThreads($this->arguments['threads']);
-        $jobFactory = new JobFactory($runner);
+        $jobPool = new JobPool($this->arguments['threads']);
+        $runner = new JobRunner($jobPool);
+        $resultProcessor = new ResultProcessor();
+        $jobFactory = new JobFactory($runner, $resultProcessor);
 
         \PHPUnit_Util_PHP::setFactory($jobFactory);
 

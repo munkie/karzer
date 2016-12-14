@@ -23,11 +23,6 @@ class Job
     private $result;
 
     /**
-     * @var boolean
-     */
-    private $oldErrorHandlerSetting;
-
-    /**
      * @var int
      */
     private $threadId;
@@ -89,7 +84,7 @@ class Job
      */
     public function startTest()
     {
-        $this->onStartTest();
+        $this->result->startTest($this->test);
         $this->process->start([self::THREAD_ENV_TOKEN => $this->threadId]);
     }
 
@@ -97,16 +92,6 @@ class Job
     {
         $this->process->close();
         $this->resultProcessor->processJobResult($this);
-        $this->onEndTest();
-    }
-
-    /**
-     * @param \PHPUnit_Framework_Exception|\Exception|string $error
-     */
-    public function failTest($error)
-    {
-        $this->addError($error);
-        $this->onEndTest();
     }
 
     /**
@@ -127,32 +112,6 @@ class Job
             $exception,
             $time
         );
-    }
-
-    private function onStartTest()
-    {
-        $this->result->startTest($this->test);
-        //$this->backupErrorHandlerSettings();
-    }
-
-    private function onEndTest()
-    {
-        //$this->restoreErrorHandlerSettings();
-        //$this->test->unsetTestResultObject();
-    }
-
-    private function backupErrorHandlerSettings()
-    {
-        if ($this->test->useErrorHandler()) {
-            $this->oldErrorHandlerSetting = $this->result->getConvertErrorsToExceptions();
-        }
-    }
-
-    private function restoreErrorHandlerSettings()
-    {
-        if ($this->test->useErrorHandler()) {
-            $this->result->convertErrorsToExceptions($this->oldErrorHandlerSetting);
-        }
     }
 
     /**
@@ -187,12 +146,13 @@ class Job
     }
 
     /**
-     * @param resource $stream
+     * @param resource $resource
      * @return bool
      */
-    public function hasStream($stream)
+    public function hasStream($resource)
     {
-        return $this->process->getStdout()->isEqualTo($stream) || $this->process->getStderr()->isEqualTo($stream);
+        return $this->process->getStdout()->isSameResource($resource)
+            || $this->process->getStderr()->isSameResource($resource);
     }
 
     /**
@@ -212,10 +172,10 @@ class Job
      */
     private function getStream($stream)
     {
-        if ($this->getStdout()->isEqualTo($stream)) {
+        if ($this->getStdout()->isSameResource($stream)) {
             return $this->getStdout();
         }
-        if ($this->getStderr()->isEqualTo($stream)) {
+        if ($this->getStderr()->isSameResource($stream)) {
             return $this->getStderr();
         }
 

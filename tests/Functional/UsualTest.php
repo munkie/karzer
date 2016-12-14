@@ -13,7 +13,7 @@ class UsualTest extends TestCase
     }
 
     /**
-     * @group Test
+     * @group abc
      */
     public function testFalse()
     {

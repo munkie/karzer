@@ -71,7 +71,7 @@ class JobPool implements \IteratorAggregate, \Countable
      * Add job to pool
      *
      * @param Job $job
-     * @throws \Karzer\Exception\FrameworkException
+     * @throws \Karzer\Exception\RuntimeException
      */
     public function add(Job $job)
     {
@@ -84,7 +84,7 @@ class JobPool implements \IteratorAggregate, \Countable
      */
     public function remove(Job $job)
     {
-        $this->freeJobPossition($job);
+        $this->freeJobPosition($job);
         $this->jobs->detach($job);
     }
 
@@ -112,7 +112,7 @@ class JobPool implements \IteratorAggregate, \Countable
      * @param Job $job
      * @throws \Karzer\Exception\RuntimeException
      */
-    protected function freeJobPossition(Job $job)
+    protected function freeJobPosition(Job $job)
     {
         foreach ($this->positions as $position => $positionJob) {
             if ($job === $positionJob) {
@@ -141,15 +141,15 @@ class JobPool implements \IteratorAggregate, \Countable
     /**
      * Get pool job by stream resource
      *
-     * @param resource $stream
+     * @param resource $resource
      * @return Job Job associated with stream resource
      *
      * @throws \Karzer\Exception\RuntimeException
      */
-    public function getJobByStream($stream)
+    public function getJobByStream($resource)
     {
         foreach ($this as $job) {
-            if ($job->hasStream($stream)) {
+            if ($job->hasStream($resource)) {
                 return $job;
             }
         }

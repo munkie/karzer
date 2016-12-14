@@ -135,6 +135,10 @@ class Process
 
     /**
      * Open process and write php script to STDIN
+     *
+     * @param array $env Custom ENV vars to pass to php script
+     *
+     * @throws \Karzer\Exception\ForkException When process open failed
      */
     public function start(array $env = [])
     {

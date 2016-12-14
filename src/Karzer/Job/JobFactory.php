@@ -4,6 +4,11 @@ namespace Karzer\Job;
 
 use Karzer\PHPUnit\Util\ResultProcessor;
 
+/**
+ * Dirty hack. JobFactory is returned by monkey-patched \PHPUnit_Util_PHP::factory() method
+ * And instead of running test in isolated process
+ * It creates job for test and adds test to job pool of runner
+ */
 class JobFactory
 {
     /**
@@ -20,11 +25,12 @@ class JobFactory
      * JobFactory constructor.
      *
      * @param JobRunner $runner
+     * @param ResultProcessor $resultProcessor
      */
-    public function __construct(JobRunner $runner)
+    public function __construct(JobRunner $runner, ResultProcessor $resultProcessor)
     {
         $this->runner = $runner;
-        $this->resultProcessor = new ResultProcessor();
+        $this->resultProcessor = $resultProcessor;
     }
 
     /**

@@ -4,8 +4,6 @@ namespace Karzer\Job;
 
 use Karzer\Exception\ForkException;
 use Karzer\Exception\RuntimeException;
-use Karzer\PHPUnit\Util\ResultProcessor;
-use SebastianBergmann\Environment\Runtime;
 
 class JobRunner
 {
@@ -17,14 +15,16 @@ class JobRunner
     /**
      * @var int|null stream_select timeout in usec
      */
-    protected $timeout = null;
+    protected $timeout;
 
     /**
      * @param JobPool $pool
+     * @param int|null $timeout
      */
-    public function __construct(JobPool $pool)
+    public function __construct(JobPool $pool, $timeout = null)
     {
         $this->pool = $pool;
+        $this->timeout = $timeout;
     }
 
     /**
@@ -38,6 +38,7 @@ class JobRunner
     /**
      * @param Job $job
      * @return bool
+     * @throws \Karzer\Exception\RuntimeException
      */
     public function startJob(Job $job)
     {
@@ -48,7 +49,7 @@ class JobRunner
             return true;
         } catch (ForkException $exception) {
             $this->pool->remove($job);
-            $job->failTest($exception);
+            $job->addError($exception);
             return false;
         }
     }
@@ -91,6 +92,7 @@ class JobRunner
      * Listen to pool streams and process jobs
      *
      * @return bool If processing should be stopped
+     * @throws \Karzer\Exception\RuntimeException When failed to read streams
      */
     private function processPoolStream()
     {
@@ -141,17 +143,6 @@ class JobRunner
         }
 
         return true;
-    }
-
-    /**
-     * @param int $maxThreads
-     * @return static
-     */
-    public static function fromThreads($maxThreads)
-    {
-        return new static(
-            new JobPool($maxThreads)
-        );
     }
 
 }
