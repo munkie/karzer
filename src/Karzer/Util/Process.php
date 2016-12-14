@@ -47,11 +47,11 @@ class Process
         try {
             $this->resource = proc_open(
                 $this->cmd,
-                array(
-                    0 => array('pipe', 'r'),
-                    1 => array('pipe', 'w'),
-                    2 => array('pipe', 'w')
-                ),
+                [
+                    0 => ['pipe', 'r'],
+                    1 => ['pipe', 'w'],
+                    2 => ['pipe', 'w']
+                ],
                 $pipes
             );
             ErrorException::restoreHandler();
@@ -74,6 +74,8 @@ class Process
     }
 
     /**
+     * Write PHP script to run test to process
+     *
      * @param string $script
      */
     public function writeScript($script)

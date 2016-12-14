@@ -23,7 +23,7 @@ class SerializableException extends FrameworkException implements \PHPUnit_Frame
 
         while ($e) {
 
-            $message.= ($message) ? "\nCaused by\n" : '';
+            $message.= $message ? "\nCaused by\n" : '';
 
             $message.= \PHPUnit_Framework_TestFailure::exceptionToString($e). "\n";
             $message.= \PHPUnit_Util_Filter::getFilteredStacktrace($e);
@@ -39,7 +39,7 @@ class SerializableException extends FrameworkException implements \PHPUnit_Frame
      */
     public function __sleep()
     {
-        return array('message');
+        return ['message'];
     }
 
     /**

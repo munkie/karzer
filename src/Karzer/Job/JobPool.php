@@ -38,6 +38,8 @@ class JobPool implements \IteratorAggregate, \Countable
     }
 
     /**
+     * Add job to pool queue
+     *
      * @param Job $job
      */
     public function enqueue(Job $job)
@@ -46,6 +48,8 @@ class JobPool implements \IteratorAggregate, \Countable
     }
 
     /**
+     * Dequeue pending job from queue
+     *
      * @return Job
      */
     public function dequeue()
@@ -54,6 +58,8 @@ class JobPool implements \IteratorAggregate, \Countable
     }
 
     /**
+     * If job queue is empty
+     *
      * @return bool
      */
     public function queueIsEmpty()
@@ -62,12 +68,14 @@ class JobPool implements \IteratorAggregate, \Countable
     }
 
     /**
+     * Add job to pool
+     *
      * @param Job $job
      * @throws \Karzer\Exception\FrameworkException
      */
     public function add(Job $job)
     {
-        $this->setPoolNumber($job);
+        $this->setJobPosition($job);
         $this->jobs->attach($job);
     }
 
@@ -76,7 +84,7 @@ class JobPool implements \IteratorAggregate, \Countable
      */
     public function remove(Job $job)
     {
-        $this->removePoolNumber($job);
+        $this->freeJobPossition($job);
         $this->jobs->detach($job);
     }
 
@@ -84,7 +92,7 @@ class JobPool implements \IteratorAggregate, \Countable
      * @param Job $job
      * @throws \Karzer\Exception\RuntimeException
      */
-    protected function setPoolNumber(Job $job)
+    protected function setJobPosition(Job $job)
     {
         $position = 0;
         do {
@@ -94,14 +102,17 @@ class JobPool implements \IteratorAggregate, \Countable
                 return;
             }
         } while (++$position < $this->max);
+
         throw new RuntimeException('No free pool positions available');
     }
 
     /**
+     * Remove job from pool slot
+     *
      * @param Job $job
      * @throws \Karzer\Exception\RuntimeException
      */
-    protected function removePoolNumber(Job $job)
+    protected function freeJobPossition(Job $job)
     {
         foreach ($this->positions as $position => $positionJob) {
             if ($job === $positionJob) {
@@ -113,20 +124,14 @@ class JobPool implements \IteratorAggregate, \Countable
     }
 
     /**
-     * @return int
-     */
-    public function getMax()
-    {
-        return $this->max;
-    }
-
-    /**
+     * Get all stdin and stderr streams of pool jobs
+     *
      * @return resource[]
      */
     public function getStreams()
     {
-        $streams = array();
-        foreach ($this->jobs as $job) {
+        $streams = [];
+        foreach ($this as $job) {
             if ($job->getStdout()->isOpen()) {
                 $streams[] = $job->getStdout()->getResource();
             }
@@ -134,10 +139,30 @@ class JobPool implements \IteratorAggregate, \Countable
                 $streams[] = $job->getStderr()->getResource();
             }
         }
+
         return $streams;
     }
 
     /**
+     * Get pool job by stream resource
+     *
+     * @param resource $stream
+     * @return Job|null Job associated with stream resource
+     */
+    public function getJobByStream($stream)
+    {
+        foreach ($this as $job) {
+            if ($job->hasStream($stream)) {
+                return $job;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Get jobs from pool slots
+     *
      * @return Job[]|\Traversable
      */
     public function getIterator()
@@ -146,6 +171,8 @@ class JobPool implements \IteratorAggregate, \Countable
     }
 
     /**
+     * Number of pool slots allocated with jobs
+     *
      * @return int
      */
     public function count()
@@ -154,18 +181,22 @@ class JobPool implements \IteratorAggregate, \Countable
     }
 
     /**
+     * All pool slots are allocated with jobs
+     *
      * @return bool
      */
     public function isFull()
     {
-        return $this->count() == $this->max;
+        return $this->max === $this->count();
     }
 
     /**
+     * Pool has no jobs
+     *
      * @return bool
      */
     public function isEmpty()
     {
-        return 0 == $this->count();
+        return 0 === $this->count();
     }
 }

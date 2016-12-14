@@ -110,7 +110,7 @@ class Job
 
         $property->setValue($this->template, $modifiedTemplate);
 
-        $this->template->setVar(array('poolPosition' => $this->getPoolPosition()));
+        $this->template->setVar(['poolPosition' => $this->getPoolPosition()]);
     }
 
     /**
@@ -122,7 +122,7 @@ class Job
         $process->open();
         $process->writeScript($this->render());
 
-        $this->setProcess($process);
+        $this->process = $process;
     }
 
     public function startTest()
@@ -154,14 +154,6 @@ class Job
         if ($this->test->useErrorHandler()) {
             $this->result->convertErrorsToExceptions($this->oldErrorHandlerSetting);
         }
-    }
-
-    /**
-     * @param Process $process
-     */
-    public function setProcess(Process $process)
-    {
-        $this->process = $process;
     }
 
     /**
@@ -205,11 +197,12 @@ class Job
     {
         if ($this->getStdout()->isEqualTo($stream)) {
             return $this->getStdout();
-        } elseif ($this->getStderr()->isEqualTo($stream)) {
-            return $this->getStderr();
-        } else {
-            return null;
         }
+        if ($this->getStderr()->isEqualTo($stream)) {
+            return $this->getStderr();
+        }
+
+        return null;
     }
 
     /**

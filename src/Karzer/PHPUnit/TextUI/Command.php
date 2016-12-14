@@ -2,6 +2,8 @@
 
 namespace Karzer\PHPUnit\TextUI;
 
+use Karzer\Job\JobPool;
+use Karzer\Job\JobRunner;
 use Karzer\PHPUnit\Framework\TestSuite;
 
 class Command extends \PHPUnit_TextUI_Command
@@ -49,6 +51,10 @@ class Command extends \PHPUnit_TextUI_Command
                 $this->arguments['testSuffixes']
             );
         }
-        return new TestSuite($suite, $this->arguments['threads']);
+
+        $pool = new JobPool($this->arguments['threads']);
+        $runner = new JobRunner($pool);
+
+        return new TestSuite($suite, $runner);
     }
 }

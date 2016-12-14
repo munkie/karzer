@@ -4,7 +4,6 @@ namespace Karzer\PHPUnit\Framework;
 
 use Karzer\Exception\RuntimeException;
 use Karzer\Job\JobTestInterface;
-use Karzer\Job\JobPool;
 use Karzer\Job\JobRunner;
 use SplObjectStorage;
 
@@ -16,16 +15,18 @@ class TestSuite extends \PHPUnit_Framework_TestSuite
     protected $runner;
 
     /**
+     * :TODO: use TestSuite as delegate
+     *
      * @param \PHPUnit_Framework_Test $testSuite
-     * @param int $threads
+     * @param JobRunner $runner
      */
-    public function __construct(\PHPUnit_Framework_Test $testSuite, $threads)
+    public function __construct(\PHPUnit_Framework_Test $testSuite, JobRunner $runner)
     {
         foreach ($this->getSuiteTests($testSuite) as $test) {
             $this->addTest($test);
         }
 
-        $this->runner = new JobRunner(new JobPool($threads));
+        $this->runner = $runner;
     }
 
     /**
@@ -34,19 +35,20 @@ class TestSuite extends \PHPUnit_Framework_TestSuite
      */
     protected function getSuiteTests(\PHPUnit_Framework_Test $testSuite)
     {
-        $tests = array();
-        if ($testSuite instanceof \PHPUnit_Framework_TestSuite) {
-            foreach ($testSuite->tests() as $test) {
-                if ($test instanceof \PHPUnit_Framework_TestSuite) {
-                    $suiteTests = $this->getSuiteTests($test);
-                    $tests = array_merge($tests, $suiteTests);
-                } else {
-                    $tests[] = $test;
-                }
-            }
-        } else {
-            $tests[] = $testSuite;
+        if (!$testSuite instanceof \PHPUnit_Framework_TestSuite) {
+            return [$testSuite];
         }
+
+        $tests = [];
+        foreach ($testSuite->tests() as $test) {
+            if ($test instanceof \PHPUnit_Framework_TestSuite) {
+                $suiteTests = $this->getSuiteTests($test);
+                $tests = array_merge($tests, $suiteTests);
+            } else {
+                $tests[] = $test;
+            }
+        }
+
         return $tests;
     }
 
@@ -61,8 +63,8 @@ class TestSuite extends \PHPUnit_Framework_TestSuite
     public function run(
         \PHPUnit_Framework_TestResult $result = null,
         $filter = false,
-        array $groups = array(),
-        array $excludeGroups = array()
+        array $groups = [],
+        array $excludeGroups = []
     ) {
         if ($result === null) {
             $result = $this->createResult();
@@ -112,7 +114,7 @@ class TestSuite extends \PHPUnit_Framework_TestSuite
      * @param array $groups
      * @return array|\PHPUnit_Framework_Test[]
      */
-    protected function getTests(array $groups = array())
+    protected function getTests(array $groups = [])
     {
         if (empty($groups)) {
             return $this->tests;
@@ -159,19 +161,20 @@ class TestSuite extends \PHPUnit_Framework_TestSuite
      * @param array $excludeGroups
      * @return bool
      */
-    protected function testIsNotInExcludeGroup(\PHPUnit_Framework_Test $test, array $excludeGroups = array())
+    protected function testIsNotInExcludeGroup(\PHPUnit_Framework_Test $test, array $excludeGroups = [])
     {
         if (!empty($excludeGroups)) {
-            foreach ($this->groups as $_group => $_tests) {
-                if (in_array($_group, $excludeGroups, true)) {
-                    foreach ($_tests as $_test) {
-                        if ($test === $_test) {
+            foreach ($this->groups as $group => $groupTests) {
+                if (in_array($group, $excludeGroups, true)) {
+                    foreach ($groupTests as $groupTest) {
+                        if ($test === $groupTest) {
                             return false;
                         }
                     }
                 }
             }
         }
+
         return true;
     }
 }

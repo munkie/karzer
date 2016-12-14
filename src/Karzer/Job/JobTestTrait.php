@@ -2,6 +2,7 @@
 
 namespace Karzer\Job;
 
+use Karzer\Exception\RuntimeException;
 use Karzer\Exception\SerializableException;
 use Karzer\Karzer;
 use Karzer\Util\TextTemplateYield;
@@ -48,6 +49,8 @@ trait JobTestTrait
     /**
      * @param \PHPUnit_Framework_TestResult $result
      * @return Job
+     *
+     * @throws \Karzer\Exception\RuntimeException
      */
     public function createJob(\PHPUnit_Framework_TestResult $result)
     {
@@ -55,8 +58,11 @@ trait JobTestTrait
             $this->yieldTemplate = true;
             $this->run($result);
         } catch (TextTemplateYield $yield) {
+            /** @var JobTestInterface $this */
             return new Job($yield->getTemplate(), $this, $result);
         }
+
+        throw new RuntimeException('Failed to created Job for test');
     }
 
     /**

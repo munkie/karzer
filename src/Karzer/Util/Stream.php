@@ -27,7 +27,7 @@ class Stream
     /**
      * @param resource $resource
      * @param int $mode
-     * @throws \Karzer\Exception\RuntimeException
+     * @throws RuntimeException
      */
     public function __construct($resource, $mode = null)
     {
@@ -38,14 +38,14 @@ class Stream
         $this->resource = $resource;
 
         if (null !== $mode) {
-            $this->setBlocking($mode);
+            $this->setBlockingMode($mode);
         }
     }
 
     /**
      * @param int $mode
      */
-    public function setBlocking($mode = self::BLOCKING_MODE)
+    public function setBlockingMode($mode)
     {
         stream_set_blocking($this->resource, $mode);
     }
@@ -73,17 +73,17 @@ class Stream
      */
     public function read($length = null)
     {
-        $length = ($length) ?: $this->readLength;
+        $length = $length ?: $this->readLength;
         $read = fread($this->resource, $length);
         if (feof($this->resource)) {
             $this->close();
         }
         if (false === $read) {
             return false;
-        } else {
-            $this->buffer.= $read;
-            return true;
         }
+
+        $this->buffer.= $read;
+        return true;
     }
 
     /**
@@ -118,11 +118,4 @@ class Stream
         return is_resource($this->resource);
     }
 
-    /**
-     * @return array
-     */
-    public function getMeta()
-    {
-        return stream_get_meta_data($this->resource);
-    }
 }
