@@ -3,9 +3,16 @@
 namespace Karzer\PHPUnit\Framework;
 
 use Karzer\Job\JobRunner;
+use PHPUnit_Framework_TestResult;
 
-class TestSuite extends \PHPUnit_Framework_TestSuite
+class ThreadedTestSuite extends \PHPUnit_Framework_TestSuite
 {
+
+    /**
+     * @var \PHPUnit_Framework_Test
+     */
+    private $baseTestSuite;
+
     /**
      * @var JobRunner
      */
@@ -19,19 +26,26 @@ class TestSuite extends \PHPUnit_Framework_TestSuite
     {
         parent::__construct();
 
+        $this->baseTestSuite = $test;
         $this->runner = $runner;
-
-        $this->addTests($test);
     }
 
     /**
-     * Get all tests from test or test suite
-     *
-     * @param \PHPUnit_Framework_Test $test
+     * {@inheritdoc}
      */
-    private function addTests(\PHPUnit_Framework_Test $test)
+    public function run(PHPUnit_Framework_TestResult $result = null)
     {
-        foreach ($this->getSuiteTests($test) as $suiteTest) {
+        $this->initTests();
+
+        return parent::run($result);
+    }
+
+    /**
+     * Add all tests from base test suite
+     */
+    private function initTests()
+    {
+        foreach ($this->getSuiteTests($this->baseTestSuite) as $suiteTest) {
             $groups = ($suiteTest instanceof \PHPUnit_Framework_TestCase) ? $suiteTest->getGroups() : [];
             $this->addTest($suiteTest, $groups);
         }

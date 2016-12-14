@@ -2,39 +2,32 @@
 
 namespace Karzer\Job;
 
+use Karzer\Exception\ForkException;
 use Karzer\Exception\RuntimeException;
 
 class JobPool implements \IteratorAggregate, \Countable
 {
     /**
-     * @var int max number of pools
-     */
-    protected $max;
-
-    /**
+     * Pending jobs queue
+     *
      * @var \SplQueue|Job[]
      */
-    protected $queue;
+    private $queue;
 
     /**
-     * @var \SplObjectStorage|Job[]
+     * Active job threads pool
+     *
+     * @var Pool|Job[]
      */
-    protected $jobs;
+    private $threads;
 
     /**
-     * @var \SplFixedArray|Job[]
+     * @param int $size
      */
-    protected $positions;
-
-    /**
-     * @param int $max
-     */
-    public function __construct($max)
+    public function __construct($size)
     {
-        $this->max = (int) $max;
-        $this->jobs = new \SplObjectStorage();
+        $this->threads = new Pool($size);
         $this->queue = new \SplQueue();
-        $this->positions = new \SplFixedArray($this->max);
     }
 
     /**
@@ -48,83 +41,77 @@ class JobPool implements \IteratorAggregate, \Countable
     }
 
     /**
-     * Dequeue pending job from queue
+     * Remove job from pool
      *
-     * @return Job
+     * @param Job $job
+     * @return bool If tests execution should be stopped
      */
-    public function dequeue()
+    public function stop(Job $job)
     {
-        return $this->queue->dequeue();
+        $shouldStop = $this->finishJob($job);
+        $this->removeJob($job);
+
+        return $shouldStop;
     }
 
     /**
-     * If job queue is empty
-     *
-     * @return bool
+     * Fill pool with pending jobs
      */
-    public function isQueueEmpty()
+    public function fillPool()
     {
-        return $this->queue->isEmpty();
+        while (!$this->threads->isFull() && !$this->queue->isEmpty()) {
+            $job = $this->queue->dequeue();
+            $this->addJob($job);
+        }
     }
-
     /**
      * Add job to pool
      *
      * @param Job $job
      * @throws \Karzer\Exception\RuntimeException
      */
-    public function add(Job $job)
+    private function addJob(Job $job)
     {
-        $this->setJobPosition($job);
-        $this->jobs->attach($job);
+        $threadId = $this->threads->add($job);
+        $job->setThreadId($threadId);
+        $this->startJob($job);
+    }
+
+    private function removeJob(Job $job)
+    {
+        $this->threads->remove($job);
+        $this->fillPool();
     }
 
     /**
-     * @param Job $job
-     */
-    public function remove(Job $job)
-    {
-        $this->freeJobPosition($job);
-        $this->jobs->detach($job);
-    }
-
-    /**
-     * @param Job $job
-     * @throws \Karzer\Exception\RuntimeException
-     */
-    protected function setJobPosition(Job $job)
-    {
-        $position = 0;
-        do {
-            if (!isset($this->positions[$position])) {
-                $this->positions[$position] = $job;
-                $job->setThreadId($position);
-                return;
-            }
-        } while (++$position < $this->max);
-
-        throw new RuntimeException('No free pool positions available');
-    }
-
-    /**
-     * Remove job from pool slot
+     * Start job execution
      *
      * @param Job $job
-     * @throws \Karzer\Exception\RuntimeException
      */
-    protected function freeJobPosition(Job $job)
+    private function startJob(Job $job)
     {
-        foreach ($this->positions as $position => $positionJob) {
-            if ($job === $positionJob) {
-                unset($this->positions[$position]);
-                return;
-            }
+        try {
+            $job->startTest();
+        } catch (ForkException $exception) {
+            $job->addError($exception);
+            $this->removeJob($job);
         }
-        throw new RuntimeException('Job has no pool position');
     }
 
     /**
-     * Get all stdin and stderr streams of pool jobs
+     * Finish job execution
+     *
+     * @param Job $job
+     * @return bool If tests execution should be stopped
+     */
+    private function finishJob(Job $job)
+    {
+        $job->endTest();
+        return $job->getResult()->shouldStop();
+    }
+
+    /**
+     * Get all open stdin and stderr streams of pool jobs
      *
      * @return resource[]
      */
@@ -164,7 +151,7 @@ class JobPool implements \IteratorAggregate, \Countable
      */
     public function getIterator()
     {
-        return $this->jobs;
+        return $this->threads;
     }
 
     /**
@@ -174,7 +161,7 @@ class JobPool implements \IteratorAggregate, \Countable
      */
     public function count()
     {
-        return $this->jobs->count();
+        return $this->threads->count();
     }
 
     /**
@@ -184,7 +171,7 @@ class JobPool implements \IteratorAggregate, \Countable
      */
     public function isFull()
     {
-        return $this->max === $this->count();
+        return $this->threads->isFull();
     }
 
     /**
@@ -194,6 +181,6 @@ class JobPool implements \IteratorAggregate, \Countable
      */
     public function isEmpty()
     {
-        return 0 === $this->count();
+        return $this->threads->isEmpty();
     }
 }

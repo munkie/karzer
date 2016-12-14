@@ -56,6 +56,8 @@ class Job
     }
 
     /**
+     * Set job pool thread id where job is assigned
+     *
      * @param int $threadId
      */
     public function setThreadId($threadId)
@@ -158,12 +160,12 @@ class Job
     /**
      * @param resource $stream
      *
-     * @return bool If stream was closed
+     * @return bool If has open streams
      */
     public function readStream($stream)
     {
         $this->getStream($stream)->read();
-        return $this->isStreamClosed();
+        return $this->hasOpenStreams();
     }
 
     /**
@@ -183,11 +185,13 @@ class Job
     }
 
     /**
+     * If all stderr and stdout streams are closed
+     *
      * @return bool
      */
-    private function isStreamClosed()
+    private function hasOpenStreams()
     {
-        return !$this->getStderr()->isOpen() && !$this->getStdout()->isOpen();
+        return $this->getStderr()->isOpen() || $this->getStdout()->isOpen();
     }
 
 }

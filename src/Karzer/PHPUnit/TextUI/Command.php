@@ -5,7 +5,7 @@ namespace Karzer\PHPUnit\TextUI;
 use Karzer\Job\JobFactory;
 use Karzer\Job\JobPool;
 use Karzer\Job\JobRunner;
-use Karzer\PHPUnit\Framework\TestSuite;
+use Karzer\PHPUnit\Framework\ThreadedTestSuite;
 use Karzer\PHPUnit\Util\ResultProcessor;
 
 class Command extends \PHPUnit_TextUI_Command
@@ -18,8 +18,10 @@ class Command extends \PHPUnit_TextUI_Command
     }
 
     /**
+     * Validate 'threads' value from cli arguments
+     *
      * @param string $value
-     * @throws \PHPUnit_Framework_Exception
+     * @throws \PHPUnit_Framework_Exception If threads is not integer
      */
     protected function handleThreads($value)
     {
@@ -30,30 +32,48 @@ class Command extends \PHPUnit_TextUI_Command
     }
 
     /**
-     * @param array $argv
+     * {@inheritdoc}
      */
-    protected function handleArguments(array $argv)
+    protected function createRunner()
     {
-        parent::handleArguments($argv);
+        $runner = parent::createRunner();
 
-        $this->arguments['test'] = $this->createTestSuite();
+        $baseTestSuite = $this->getBaseTestSuite($runner);
+        $this->arguments['test'] = $this->createTestSuite($baseTestSuite);
+
+        return $runner;
     }
 
     /**
-     * @return TestSuite
+     * Get base test suite
+     *
+     * @param \PHPUnit_Runner_BaseTestRunner $runner
+     * @return \PHPUnit_Framework_Test
      */
-    protected function createTestSuite()
+    private function getBaseTestSuite(\PHPUnit_Runner_BaseTestRunner $runner)
     {
-        if (isset($this->arguments['test']) && $this->arguments['test'] instanceof \PHPUnit_Framework_TestSuite) {
-            $suite = $this->arguments['test'];
-        } else {
-            $suite = $this->createRunner()->getTest(
-                $this->arguments['test'],
-                $this->arguments['testFile'],
-                $this->arguments['testSuffixes']
-            );
+        if (array_key_exists('test', $this->arguments)
+            && $this->arguments['test'] instanceof \PHPUnit_Framework_Test
+        ) {
+            return $this->arguments['test'];
         }
 
+        return $runner->getTest(
+            $this->arguments['test'],
+            $this->arguments['testFile'],
+            $this->arguments['testSuffixes']
+        );
+    }
+
+    /**
+     * Create thread test suite
+     *
+     * @param \PHPUnit_Framework_Test $testSuite
+     *
+     * @return ThreadedTestSuite
+     */
+    private function createTestSuite(\PHPUnit_Framework_Test $testSuite)
+    {
         $jobPool = new JobPool($this->arguments['threads']);
         $runner = new JobRunner($jobPool);
         $resultProcessor = new ResultProcessor();
@@ -61,6 +81,7 @@ class Command extends \PHPUnit_TextUI_Command
 
         \PHPUnit_Util_PHP::setFactory($jobFactory);
 
-        return new TestSuite($suite, $runner);
+        return new ThreadedTestSuite($testSuite, $runner);
     }
+
 }
