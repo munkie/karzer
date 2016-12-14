@@ -16,4 +16,9 @@ class UsualTest extends TestCase
     {
         static::assertTrue(false);
     }
+
+    public function testFail()
+    {
+        static::fail(sprintf('TEST_TOKEN: %s', $_SERVER['TEST_TOKEN']));
+    }
 }

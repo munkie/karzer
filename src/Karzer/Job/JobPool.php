@@ -62,7 +62,7 @@ class JobPool implements \IteratorAggregate, \Countable
      *
      * @return bool
      */
-    public function queueIsEmpty()
+    public function isQueueEmpty()
     {
         return $this->queue->isEmpty();
     }
@@ -132,15 +132,10 @@ class JobPool implements \IteratorAggregate, \Countable
     {
         $streams = [];
         foreach ($this as $job) {
-            if ($job->getStdout()->isOpen()) {
-                $streams[] = $job->getStdout()->getResource();
-            }
-            if ($job->getStderr()->isOpen()) {
-                $streams[] = $job->getStderr()->getResource();
-            }
+            $streams[] = $job->getOpenStreams();
         }
 
-        return $streams;
+        return array_merge(...$streams);
     }
 
     /**
@@ -148,6 +143,8 @@ class JobPool implements \IteratorAggregate, \Countable
      *
      * @param resource $stream
      * @return Job Job associated with stream resource
+     *
+     * @throws \Karzer\Exception\RuntimeException
      */
     public function getJobByStream($stream)
     {

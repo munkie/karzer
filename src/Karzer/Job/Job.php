@@ -10,6 +10,8 @@ use Karzer\Util\Stream;
 class Job
 {
 
+    const THREAD_ENV_TOKEN = 'TEST_TOKEN';
+
     /**
      * @var \PHPUnit_Framework_Test
      */
@@ -58,6 +60,14 @@ class Job
     }
 
     /**
+     * @param int $threadId
+     */
+    public function setThreadId($threadId)
+    {
+        $this->threadId = $threadId;
+    }
+
+    /**
      * @return \PHPUnit_Framework_TestResult
      */
     public function getResult()
@@ -79,7 +89,7 @@ class Job
     public function startTest()
     {
         $this->onStartTest();
-        $this->process->start();
+        $this->process->start([self::THREAD_ENV_TOKEN => $this->threadId]);
     }
 
     public function endTest()
@@ -96,6 +106,26 @@ class Job
     {
         $this->addError($error);
         $this->onEndTest();
+    }
+
+    /**
+     * @param \PHPUnit_Framework_Exception|\Exception|string $error
+     * @param int $time
+     */
+    public function addError($error, $time = 0)
+    {
+        if ($error instanceof \PHPUnit_Framework_Exception) {
+            $exception = $error;
+        } elseif ($error instanceof \Exception) {
+            $exception = new \PHPUnit_Framework_Exception($error->getMessage(), 0, $error);
+        } else {
+            $exception = new \PHPUnit_Framework_Exception($error);
+        }
+        $this->result->addError(
+            $this->test,
+            $exception,
+            $time
+        );
     }
 
     private function onStartTest()
@@ -141,6 +171,21 @@ class Job
     }
 
     /**
+     * @return resource[]
+     */
+    public function getOpenStreams()
+    {
+        $streams = [];
+        if ($this->getStdout()->isOpen()) {
+            $streams[] = $this->getStdout()->getResource();
+        }
+        if ($this->getStderr()->isOpen()) {
+            $streams[] = $this->getStderr()->getResource();
+        }
+        return $streams;
+    }
+
+    /**
      * @param resource $stream
      * @return bool
      */
@@ -151,9 +196,20 @@ class Job
 
     /**
      * @param resource $stream
+     *
+     * @return bool If stream was closed
+     */
+    public function readStream($stream)
+    {
+        $this->getStream($stream)->read();
+        return $this->isStreamClosed();
+    }
+
+    /**
+     * @param resource $stream
      * @return Stream|null
      */
-    public function getStream($stream)
+    private function getStream($stream)
     {
         if ($this->getStdout()->isEqualTo($stream)) {
             return $this->getStdout();
@@ -168,36 +224,9 @@ class Job
     /**
      * @return bool
      */
-    public function isStreamClosed()
+    private function isStreamClosed()
     {
         return !$this->getStderr()->isOpen() && !$this->getStdout()->isOpen();
     }
 
-    /**
-     * @param int $threadId
-     */
-    public function setThreadId($threadId)
-    {
-        $this->threadId = $threadId;
-    }
-
-    /**
-     * @param \PHPUnit_Framework_Exception|\Exception|string $error
-     * @param int $time
-     */
-    public function addError($error, $time = 0)
-    {
-        if ($error instanceof \PHPUnit_Framework_Exception) {
-            $exception = $error;
-        } elseif ($error instanceof \Exception) {
-            $exception = new \PHPUnit_Framework_Exception($error->getMessage(), 0, $error);
-        } else {
-            $exception = new \PHPUnit_Framework_Exception($error);
-        }
-        $this->result->addError(
-            $this->test,
-            $exception,
-            $time
-        );
-    }
 }

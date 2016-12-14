@@ -29,6 +29,13 @@ class Process
     private $resource;
 
     /**
+     * Env vars
+     *
+     * @var array
+     */
+    private $env = [];
+
+    /**
      * STDIN stream
      *
      * @var Stream
@@ -61,26 +68,44 @@ class Process
 
     /**
      * @param string $script
-     * @param array $envs
      * @param array $settings
      * @param string|null $file
      *
      * @return static
      */
-    public static function createPhpProcess($script, array $envs = [], array $settings = [], $file = null)
+    public static function createPhpProcess($script, array $settings = [], $file = null)
     {
-        $php = new \PHPUnit_Util_PHP_Default();
-        $php->setEnv($envs);
-        $cmd = $php->getCommand($settings, $file);
+        $cmd = (new \PHPUnit_Util_PHP_Default())->getCommand($settings, $file);
 
         return new static($cmd, $script);
     }
 
     /**
+     * @param array $customEnv
+     * @return array
+     */
+    private function getEnv(array $customEnv)
+    {
+        $env = isset($_SERVER) ? $_SERVER : [];
+        unset($env['argv'], $env['argc']);
+        $env = array_merge($env, $customEnv);
+
+        foreach ($env as $envKey => $envVar) {
+            if (is_array($envVar)) {
+                unset($env[$envKey]);
+            }
+        }
+
+        return $env;
+    }
+
+    /**
      * Open process
+     *
+     * @param array $env
      * @throws ForkException
      */
-    public function open()
+    public function open(array $env = [])
     {
         ErrorException::setHandler();
 
@@ -92,7 +117,9 @@ class Process
                     1 => ['pipe', 'w'],
                     2 => ['pipe', 'w']
                 ],
-                $pipes
+                $pipes,
+                null,
+                $this->getEnv($env)
             );
         } catch (ErrorException $exception) {
             throw ForkException::forkFailed($exception, $this->cmd);
@@ -116,9 +143,9 @@ class Process
     /**
      * Open process and write php script to STDIN
      */
-    public function start()
+    public function start(array $env = [])
     {
-        $this->open();
+        $this->open($env);
         $this->stdin->write($this->script);
         $this->stdin->close();
     }

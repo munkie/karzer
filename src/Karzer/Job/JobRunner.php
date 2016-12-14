@@ -68,7 +68,7 @@ class JobRunner
      */
     private function fillPool()
     {
-        while (!$this->pool->isFull() && !$this->pool->queueIsEmpty()) {
+        while (!$this->pool->isFull() && !$this->pool->isQueueEmpty()) {
             $job = $this->pool->dequeue();
             $this->startJob($job);
         }
@@ -132,9 +132,7 @@ class JobRunner
      */
     private function processPoolJob(Job $job, $stream)
     {
-        $job->getStream($stream)->read();
-
-        if ($job->isStreamClosed()) {
+        if ($job->readStream($stream)) {
             $this->stopJob($job);
             if ($job->getResult()->shouldStop()) {
                 return false;
