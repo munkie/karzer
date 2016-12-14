@@ -6,7 +6,7 @@ use Karzer\Job\JobFactory;
 use Karzer\Job\JobPool;
 use Karzer\Job\JobRunner;
 use Karzer\PHPUnit\Framework\ThreadedTestSuite;
-use Karzer\PHPUnit\Util\ResultProcessor;
+use Karzer\Job\ResultProcessor;
 
 class Command extends \PHPUnit_TextUI_Command
 {

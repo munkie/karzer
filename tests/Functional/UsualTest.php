@@ -24,4 +24,9 @@ class UsualTest extends TestCase
     {
         static::fail(sprintf('TEST_TOKEN: %s', $_SERVER['TEST_TOKEN']));
     }
+
+    public function testEnv()
+    {
+        static::fail(sprintf('SYMFONY_DEBUG: %s', $_SERVER['SYMFONY_DEBUG']));
+    }
 }

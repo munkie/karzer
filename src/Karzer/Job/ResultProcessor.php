@@ -1,8 +1,6 @@
 <?php
 
-namespace Karzer\PHPUnit\Util;
-
-use Karzer\Job\Job;
+namespace Karzer\Job;
 
 class ResultProcessor
 {

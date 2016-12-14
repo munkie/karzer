@@ -2,7 +2,7 @@
 
 namespace Karzer\Job;
 
-use Karzer\PHPUnit\Util\ResultProcessor;
+use Karzer\Job\ResultProcessor;
 
 /**
  * Dirty hack. JobFactory is returned by monkey-patched \PHPUnit_Util_PHP::factory() method

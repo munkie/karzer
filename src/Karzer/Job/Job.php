@@ -3,7 +3,7 @@
 namespace Karzer\Job;
 
 use Karzer\Exception\ForkException;
-use Karzer\PHPUnit\Util\ResultProcessor;
+use Karzer\Job\ResultProcessor;
 use Karzer\Util\Process;
 use Karzer\Util\Stream;
 
