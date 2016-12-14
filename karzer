@@ -5,20 +5,20 @@ use Karzer\PHPUnit\TextUI\Command;
 
 define('PHPUnit_MAIN_METHOD', 'PHPUnit_TextUI_Command::main');
 
-$files = array(
+$files = [
+    __DIR__ . '/../../autoload.php',
+    __DIR__ . '/../vendor/autoload.php',
     __DIR__ . '/vendor/autoload.php',
-    __DIR__ . '/../../autoload.php'
-);
+];
 
 foreach ($files as $file) {
     if (file_exists($file)) {
-        require $file;
-
         define('PHPUNIT_COMPOSER_INSTALL', $file);
-
         break;
     }
 }
+
+unset($file);
 
 if (!defined('PHPUNIT_COMPOSER_INSTALL')) {
     die(
@@ -27,5 +27,8 @@ if (!defined('PHPUNIT_COMPOSER_INSTALL')) {
       'php composer.phar install' . PHP_EOL
     );
 }
+
+require PHPUNIT_COMPOSER_INSTALL;
+require_once __DIR__ . '/monkeyPatch.php';
 
 Command::main();

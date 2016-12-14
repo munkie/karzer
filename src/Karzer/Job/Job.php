@@ -2,59 +2,59 @@
 
 namespace Karzer\Job;
 
+use Karzer\Exception\ForkException;
+use Karzer\PHPUnit\Util\ResultProcessor;
 use Karzer\Util\Process;
 use Karzer\Util\Stream;
 
 class Job
 {
-    /**
-     * @var \Text_Template
-     */
-    protected $template;
 
     /**
-     * @var JobTestInterface
+     * @var \PHPUnit_Framework_Test
      */
-    protected $test;
+    private $test;
 
     /**
      * @var \PHPUnit_Framework_TestResult
      */
-    protected $result;
+    private $result;
 
     /**
      * @var boolean
      */
-    protected $oldErrorHandlerSetting;
+    private $oldErrorHandlerSetting;
 
     /**
      * @var int
      */
-    protected $poolPosition;
+    private $threadId;
 
     /**
      * @var Process
      */
-    protected $process;
+    private $process;
 
     /**
-     * @var string
+     * @var ResultProcessor
      */
-    protected $render;
+    private $resultProcessor;
 
     /**
-     * @param \Text_Template $template
-     * @param JobTestInterface $test
+     * @param string $script
+     * @param \PHPUnit_Framework_Test $test
      * @param \PHPUnit_Framework_TestResult $result
      */
     public function __construct(
-        \Text_Template $template,
-        JobTestInterface $test,
-        \PHPUnit_Framework_TestResult $result
+        $script,
+        \PHPUnit_Framework_Test $test,
+        \PHPUnit_Framework_TestResult $result,
+        ResultProcessor $resultProcessor
     ) {
-        $this->template = $template;
         $this->test = $test;
         $this->result = $result;
+        $this->resultProcessor = $resultProcessor;
+        $this->process = Process::createPhpProcess($script);
     }
 
     /**
@@ -66,15 +66,7 @@ class Job
     }
 
     /**
-     * @return \Text_Template
-     */
-    public function getTemplate()
-    {
-        return $this->template;
-    }
-
-    /**
-     * @return JobTestInterface
+     * @return \PHPUnit_Framework_Test
      */
     public function getTest()
     {
@@ -82,74 +74,50 @@ class Job
     }
 
     /**
-     * @return string
+     * @throws ForkException
      */
-    public function render()
-    {
-        if (null === $this->render) {
-            $this->modifyTemplate();
-            $this->render = $this->template->render();
-        }
-        return $this->render;
-    }
-
-    /**
-     * XXX dirty hack of template
-     */
-    protected function modifyTemplate()
-    {
-        $property = new \ReflectionProperty($this->template, 'template');
-        $property->setAccessible(true);
-        $template = $property->getValue($this->template);
-
-        $modifiedTemplate = str_replace(
-            "\$test->setInIsolation(TRUE);\n",
-            "\$test->setInIsolation(TRUE);\n    \$test->setPoolPosition({poolPosition});\n",
-            $template
-        );
-
-        $property->setValue($this->template, $modifiedTemplate);
-
-        $this->template->setVar(['poolPosition' => $this->getPoolPosition()]);
-    }
-
-    /**
-     * @param string $php Php executable
-     */
-    public function start($php)
-    {
-        $process = new Process($php);
-        $process->open();
-        $process->writeScript($this->render());
-
-        $this->process = $process;
-    }
-
     public function startTest()
     {
-        $this->result->startTest($this->test);
-        $this->backupErrorHandlerSettings();
-    }
-
-    public function stop()
-    {
-        $this->getProcess()->close();
+        $this->onStartTest();
+        $this->process->start();
     }
 
     public function endTest()
     {
-        $this->restoreErrorHandlerSettings();
-        $this->test->unsetTestResultObject();
+        $this->process->close();
+        $this->resultProcessor->processJobResult($this);
+        $this->onEndTest();
     }
 
-    protected function backupErrorHandlerSettings()
+    /**
+     * @param \PHPUnit_Framework_Exception|\Exception|string $error
+     */
+    public function failTest($error)
+    {
+        $this->addError($error);
+        $this->onEndTest();
+    }
+
+    private function onStartTest()
+    {
+        $this->result->startTest($this->test);
+        //$this->backupErrorHandlerSettings();
+    }
+
+    private function onEndTest()
+    {
+        //$this->restoreErrorHandlerSettings();
+        //$this->test->unsetTestResultObject();
+    }
+
+    private function backupErrorHandlerSettings()
     {
         if ($this->test->useErrorHandler()) {
             $this->oldErrorHandlerSetting = $this->result->getConvertErrorsToExceptions();
         }
     }
 
-    protected function restoreErrorHandlerSettings()
+    private function restoreErrorHandlerSettings()
     {
         if ($this->test->useErrorHandler()) {
             $this->result->convertErrorsToExceptions($this->oldErrorHandlerSetting);
@@ -157,19 +125,11 @@ class Job
     }
 
     /**
-     * @return Process
-     */
-    public function getProcess()
-    {
-        return $this->process;
-    }
-
-    /**
      * @return Stream
      */
     public function getStderr()
     {
-        return $this->getProcess()->getStderr();
+        return $this->process->getStderr();
     }
 
     /**
@@ -177,7 +137,7 @@ class Job
      */
     public function getStdout()
     {
-        return $this->getProcess()->getStdout();
+        return $this->process->getStdout();
     }
 
     /**
@@ -186,7 +146,7 @@ class Job
      */
     public function hasStream($stream)
     {
-        return $this->getStdout()->isEqualTo($stream) || $this->getStderr()->isEqualTo($stream);
+        return $this->process->getStdout()->isEqualTo($stream) || $this->process->getStderr()->isEqualTo($stream);
     }
 
     /**
@@ -208,26 +168,17 @@ class Job
     /**
      * @return bool
      */
-    public function isClosed()
+    public function isStreamClosed()
     {
         return !$this->getStderr()->isOpen() && !$this->getStdout()->isOpen();
     }
 
     /**
-     * @param int $poolPosition
+     * @param int $threadId
      */
-    public function setPoolPosition($poolPosition)
+    public function setThreadId($threadId)
     {
-        $this->poolPosition = $poolPosition;
-        $this->test->setPoolPosition($poolPosition);
-    }
-
-    /**
-     * @return int
-     */
-    public function getPoolPosition()
-    {
-        return $this->poolPosition;
+        $this->threadId = $threadId;
     }
 
     /**
@@ -243,8 +194,8 @@ class Job
         } else {
             $exception = new \PHPUnit_Framework_Exception($error);
         }
-        $this->getResult()->addError(
-            $this->getTest(),
+        $this->result->addError(
+            $this->test,
             $exception,
             $time
         );

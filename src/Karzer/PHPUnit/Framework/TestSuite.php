@@ -2,9 +2,9 @@
 
 namespace Karzer\PHPUnit\Framework;
 
-use Karzer\Exception\RuntimeException;
-use Karzer\Job\JobTestInterface;
+use Karzer\Job\JobFactory;
 use Karzer\Job\JobRunner;
+use Karzer\Util\Reflection;
 use SplObjectStorage;
 
 class TestSuite extends \PHPUnit_Framework_TestSuite
@@ -81,25 +81,22 @@ class TestSuite extends \PHPUnit_Framework_TestSuite
                         && $this->testIsNotInExcludeGroup($test, $excludeGroups);
 
             if ($runTest) {
-                if ($test instanceof \PHPUnit_Framework_TestCase) {
+                if ($test instanceof \PHPUnit_Framework_TestCase ||
+                    $test instanceof self) {
+                    $test->setbeStrictAboutChangesToGlobalState(
+                        Reflection::getObjectValue(
+                            $this,
+                            'beStrictAboutChangesToGlobalState',
+                            \PHPUnit_Framework_TestSuite::class
+                        )
+                    );
                     $test->setBackupGlobals($this->backupGlobals);
                     $test->setBackupStaticAttributes($this->backupStaticAttributes);
                     $test->setRunTestInSeparateProcess($this->runTestInSeparateProcess);
                 }
 
-                if (!$test instanceof JobTestInterface) {
-                    throw new RuntimeException(
-                        sprintf(
-                            'Test must implement JobTestInterface to be run by karzer - %s',
-                            \PHPUnit_Util_Test::describe($test)
-                        )
-                    );
-                } elseif (!$test->runTestInSeparateProcess()) {
-                    throw new RuntimeException('Tests must by run in process isolation mode');
-                } else {
-                    $job = $test->createJob($result);
-                    $this->runner->enqueueJob($job);
-                }
+                // Actually registers test in job pull
+                $test->run($result);
             }
         }
 

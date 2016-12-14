@@ -98,7 +98,7 @@ class JobPool implements \IteratorAggregate, \Countable
         do {
             if (!isset($this->positions[$position])) {
                 $this->positions[$position] = $job;
-                $job->setPoolPosition($position);
+                $job->setThreadId($position);
                 return;
             }
         } while (++$position < $this->max);

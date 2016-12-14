@@ -2,6 +2,9 @@
 
 namespace Karzer\Job;
 
+/**
+ * @deprecated
+ */
 interface JobTestInterface extends \PHPUnit_Framework_Test
 {
     /**

@@ -8,38 +8,78 @@ use Karzer\Exception\ForkException;
 class Process
 {
     /**
+     * PHP execute command
+     *
      * @var string
      */
-    protected $cmd;
+    private $cmd;
 
     /**
+     * PHP script to execute
+     *
+     * @var string
+     */
+    private $script;
+
+    /**
+     * Process resource
+     *
      * @var resource
      */
-    protected $resource;
+    private $resource;
 
     /**
+     * STDIN stream
+     *
      * @var Stream
      */
-    protected $stdin;
+    private $stdin;
 
     /**
+     * STDOUT stream
+     *
      * @var Stream
      */
-    protected $stdout;
+    private $stdout;
 
     /**
+     * STDERR stream
+     *
      * @var Stream
      */
-    protected $stderr;
+    private $stderr;
 
     /**
-     * @param string $cmd
+     * @param string $cmd PHP executable command
+     * @param string $script PHP script to execute
      */
-    public function __construct($cmd)
+    public function __construct($cmd, $script)
     {
         $this->cmd = $cmd;
+        $this->script = $script;
     }
 
+    /**
+     * @param string $script
+     * @param array $envs
+     * @param array $settings
+     * @param string|null $file
+     *
+     * @return static
+     */
+    public static function createPhpProcess($script, array $envs = [], array $settings = [], $file = null)
+    {
+        $php = new \PHPUnit_Util_PHP_Default();
+        $php->setEnv($envs);
+        $cmd = $php->getCommand($settings, $file);
+
+        return new static($cmd, $script);
+    }
+
+    /**
+     * Open process
+     * @throws ForkException
+     */
     public function open()
     {
         ErrorException::setHandler();
@@ -54,10 +94,10 @@ class Process
                 ],
                 $pipes
             );
+        } catch (ErrorException $exception) {
+            throw ForkException::forkFailed($exception, $this->cmd);
+        } finally {
             ErrorException::restoreHandler();
-        } catch (ErrorException $e) {
-            ErrorException::restoreHandler();
-            throw new ForkException('Failed to fork process', 0, $e);
         }
 
         $this->stdin  = new Stream($pipes[0]);
@@ -74,14 +114,13 @@ class Process
     }
 
     /**
-     * Write PHP script to run test to process
-     *
-     * @param string $script
+     * Open process and write php script to STDIN
      */
-    public function writeScript($script)
+    public function start()
     {
-        $this->getStdin()->write($script);
-        $this->getStdin()->close();
+        $this->open();
+        $this->stdin->write($this->script);
+        $this->stdin->close();
     }
 
     /**
@@ -90,14 +129,6 @@ class Process
     public function getStderr()
     {
         return $this->stderr;
-    }
-
-    /**
-     * @return Stream
-     */
-    public function getStdin()
-    {
-        return $this->stdin;
     }
 
     /**

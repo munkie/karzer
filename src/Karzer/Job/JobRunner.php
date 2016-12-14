@@ -15,23 +15,16 @@ class JobRunner
     protected $pool;
 
     /**
-     * @var ResultProcessor
-     */
-    protected $resultProcessor;
-
-    /**
      * @var int|null stream_select timeout in usec
      */
     protected $timeout = null;
 
     /**
      * @param JobPool $pool
-     * @param ResultProcessor $resultProcessor
      */
-    public function __construct(JobPool $pool, ResultProcessor $resultProcessor)
+    public function __construct(JobPool $pool)
     {
         $this->pool = $pool;
-        $this->resultProcessor = $resultProcessor;
     }
 
     /**
@@ -51,18 +44,13 @@ class JobRunner
         $this->pool->add($job);
 
         try {
-            $runtime = new Runtime();
-            $job->start($runtime->getBinary());
-        } catch (ForkException $e) {
-            $this->pool->remove($job);
             $job->startTest();
-            $job->addError($e);
-            $job->endTest();
+            return true;
+        } catch (ForkException $exception) {
+            $this->pool->remove($job);
+            $job->failTest($exception);
             return false;
         }
-
-        $job->startTest();
-        return true;
     }
 
     /**
@@ -70,19 +58,15 @@ class JobRunner
      */
     public function stopJob(Job $job)
     {
-        $this->pool->remove($job);
-
-        $job->stop();
-
-        $this->resultProcessor->processJobResult($job);
-
         $job->endTest();
+
+        $this->pool->remove($job);
     }
 
     /**
      * Fill pool with jobs from queue
      */
-    protected function fillPool()
+    private function fillPool()
     {
         while (!$this->pool->isFull() && !$this->pool->queueIsEmpty()) {
             $job = $this->pool->dequeue();
@@ -150,7 +134,7 @@ class JobRunner
     {
         $job->getStream($stream)->read();
 
-        if ($job->isClosed()) {
+        if ($job->isStreamClosed()) {
             $this->stopJob($job);
             if ($job->getResult()->shouldStop()) {
                 return false;
@@ -168,8 +152,7 @@ class JobRunner
     public static function fromThreads($maxThreads)
     {
         return new static(
-            new JobPool($maxThreads),
-            new ResultProcessor()
+            new JobPool($maxThreads)
         );
     }
 
