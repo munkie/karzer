@@ -32,6 +32,6 @@
         }
     },
     "bin": [
-        "karzer"
+        "phpunit-para"
     ]
 }

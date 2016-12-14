@@ -12,6 +12,9 @@ class UsualTest extends TestCase
         static::assertTrue(true);
     }
 
+    /**
+     * @group Test
+     */
     public function testFalse()
     {
         static::assertTrue(false);

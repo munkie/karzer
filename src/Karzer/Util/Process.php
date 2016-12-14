@@ -29,13 +29,6 @@ class Process
     private $resource;
 
     /**
-     * Env vars
-     *
-     * @var array
-     */
-    private $env = [];
-
-    /**
      * STDIN stream
      *
      * @var Stream

@@ -43,9 +43,10 @@ class Job
     private $resultProcessor;
 
     /**
-     * @param string $script
-     * @param \PHPUnit_Framework_Test $test
-     * @param \PHPUnit_Framework_TestResult $result
+     * @param string $script PHP Script to execute
+     * @param \PHPUnit_Framework_Test $test Test case
+     * @param \PHPUnit_Framework_TestResult $result Test result
+     * @param ResultProcessor $resultProcessor Child process result processor
      */
     public function __construct(
         $script,

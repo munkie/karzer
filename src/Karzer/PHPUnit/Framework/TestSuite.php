@@ -44,11 +44,10 @@ class TestSuite extends \PHPUnit_Framework_TestSuite
         $tests = [];
 
         foreach ($testSuite as $test) {
-            $suiteTests = $this->getSuiteTests($test);
-            $tests = array_merge($tests, $suiteTests);
+            $tests[] = $this->getSuiteTests($test);
         }
 
-        return $tests;
+        return array_merge(...$tests);
     }
 
     /**
@@ -95,7 +94,7 @@ class TestSuite extends \PHPUnit_Framework_TestSuite
                     $test->setRunTestInSeparateProcess($this->runTestInSeparateProcess);
                 }
 
-                // Actually registers test in job pull
+                // Actually registers test in job pool
                 $test->run($result);
             }
         }
@@ -111,7 +110,7 @@ class TestSuite extends \PHPUnit_Framework_TestSuite
      * Get tests by groups
      *
      * @param string[] $groups
-     * @return array|\PHPUnit_Framework_Test[]
+     * @return \PHPUnit_Framework_Test[]
      */
     protected function getTests(array $groups = [])
     {
@@ -119,6 +118,7 @@ class TestSuite extends \PHPUnit_Framework_TestSuite
             return $this->tests;
         }
 
+        // To ensure there will be no duplicated tests
         $tests = new SplObjectStorage;
 
         foreach ($groups as $group) {
@@ -134,24 +134,27 @@ class TestSuite extends \PHPUnit_Framework_TestSuite
 
     /**
      * @param \PHPUnit_Framework_Test $test
-     * @param string $filter
+     * @param string|bool $filter
      * @return bool
      */
-    protected function testMatchesFilter(\PHPUnit_Framework_Test $test, $filter)
+    private function testMatchesFilter(\PHPUnit_Framework_Test $test, $filter)
     {
-        if ($filter !== false) {
-            $tmp = \PHPUnit_Util_Test::describe($test, false);
-
-            if ($tmp[0] !== '') {
-                $name = implode('::', $tmp);
-            } else {
-                $name = $tmp[1];
-            }
-
-            if (preg_match($filter, $name) === 0) {
-                return false;
-            }
+        if (false === $filter) {
+            return true;
         }
+
+        $tmp = \PHPUnit_Util_Test::describe($test, false);
+
+        if ($tmp[0] !== '') {
+            $name = implode('::', $tmp);
+        } else {
+            $name = $tmp[1];
+        }
+
+        if (0 === preg_match($filter, $name)) {
+            return false;
+        }
+
         return true;
     }
 
@@ -160,17 +163,15 @@ class TestSuite extends \PHPUnit_Framework_TestSuite
      * @param array $excludeGroups
      * @return bool
      */
-    protected function testIsNotInExcludeGroup(\PHPUnit_Framework_Test $test, array $excludeGroups = [])
+    private function testIsNotInExcludeGroup(\PHPUnit_Framework_Test $test, array $excludeGroups = [])
     {
-        if (!empty($excludeGroups)) {
-            foreach ($this->groups as $group => $groupTests) {
-                if (in_array($group, $excludeGroups, true)) {
-                    foreach ($groupTests as $groupTest) {
-                        if ($test === $groupTest) {
-                            return false;
-                        }
-                    }
-                }
+        if (empty($excludeGroups)) {
+            return true;
+        }
+
+        foreach ($this->groups as $group => $groupTests) {
+            if (in_array($group, $excludeGroups, true) && in_array($test, $groupTests, true)) {
+                return false;
             }
         }
 

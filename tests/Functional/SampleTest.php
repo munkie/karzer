@@ -2,7 +2,7 @@
 
 namespace Karzer\Tests\Functional;
 
-use Karzer\PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\TestCase;
 
 class SampleTest extends TestCase
 {
