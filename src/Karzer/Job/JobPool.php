@@ -147,7 +147,7 @@ class JobPool implements \IteratorAggregate, \Countable
      * Get pool job by stream resource
      *
      * @param resource $stream
-     * @return Job|null Job associated with stream resource
+     * @return Job Job associated with stream resource
      */
     public function getJobByStream($stream)
     {
@@ -157,7 +157,7 @@ class JobPool implements \IteratorAggregate, \Countable
             }
         }
 
-        return null;
+        throw new RuntimeException('No job is associated with stream');
     }
 
     /**

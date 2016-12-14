@@ -4,14 +4,20 @@ namespace Karzer\Job;
 
 use Karzer\Exception\ForkException;
 use Karzer\Exception\RuntimeException;
+use Karzer\PHPUnit\Util\ResultProcessor;
 use SebastianBergmann\Environment\Runtime;
 
-class JobRunner extends \PHPUnit_Util_PHP_Default
+class JobRunner
 {
     /**
      * @var JobPool|Job[]
      */
     protected $pool;
+
+    /**
+     * @var ResultProcessor
+     */
+    protected $resultProcessor;
 
     /**
      * @var int|null stream_select timeout in usec
@@ -20,10 +26,12 @@ class JobRunner extends \PHPUnit_Util_PHP_Default
 
     /**
      * @param JobPool $pool
+     * @param ResultProcessor $resultProcessor
      */
-    public function __construct(JobPool $pool)
+    public function __construct(JobPool $pool, ResultProcessor $resultProcessor)
     {
         $this->pool = $pool;
+        $this->resultProcessor = $resultProcessor;
     }
 
     /**
@@ -66,27 +74,7 @@ class JobRunner extends \PHPUnit_Util_PHP_Default
 
         $job->stop();
 
-        try {
-            $reflectionObject = new \ReflectionObject($this);
-            $method = $reflectionObject->getMethod('processChildResult');
-            $method->setAccessible(true);
-
-            $method->invoke(
-                $this,
-                $job->getTest(),
-                $job->getResult(),
-                $job->getStdout()->getBuffer(),
-                $job->getStderr()->getBuffer()
-            );
-        } catch (\ErrorException $e) {
-            $job->addError(
-                new \PHPUnit_Framework_Exception(
-                    $job->getStdout()->getBuffer(true),
-                    0,
-                    $e
-                )
-            );
-        }
+        $this->resultProcessor->processJobResult($job);
 
         $job->endTest();
     }
@@ -104,41 +92,85 @@ class JobRunner extends \PHPUnit_Util_PHP_Default
 
     /**
      * @throws \Karzer\Exception\RuntimeException
-     * @return Job[]|bool
      */
     public function run()
     {
         $this->fillPool();
 
-        while (!$this->pool->isEmpty()) {
-            $r = $this->pool->getStreams();
-            $w = array();
-            $x = array();
-
-            if (count($r) > 0) {
-                $result = stream_select($r, $w, $x, null, $this->timeout);
-
-                if (false === $result) {
-                    throw new RuntimeException('Stream select failed');
-                } elseif (0 === $result) {
-                    continue;
-                }
-
-                foreach ($r as $stream) {
-                    foreach ($this->pool as $job) {
-                        if ($job->hasStream($stream)) {
-                            $job->getStream($stream)->read();
-                            if ($job->isClosed()) {
-                                $this->stopJob($job);
-                                if ($job->getResult()->shouldStop()) {
-                                    break(3);
-                                }
-                                $this->fillPool();
-                            }
-                        }
-                    }
-                }
-            }
+        $shouldStop = false;
+        while (!$shouldStop && !$this->pool->isEmpty()) {
+            $shouldStop = !$this->processPoolStream();
         }
     }
+
+    /**
+     * Listen to pool streams and process jobs
+     *
+     * @return bool If processing should be stopped
+     */
+    private function processPoolStream()
+    {
+        $read = $this->pool->getStreams();
+
+        if (0 === count($read)) {
+            return true;
+        }
+
+        $write = $except = [];
+
+        $result = stream_select($read, $write, $except, null, $this->timeout);
+
+        if (false === $result) {
+            throw new RuntimeException('Stream select failed');
+        }
+
+        // No changes in streams during timeout, will try one more time
+        if (0 === $result) {
+            return true;
+        }
+
+        foreach ($read as $stream) {
+            $job = $this->pool->getJobByStream($stream);
+            if (!$this->processPoolJob($job, $stream)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Read job stream and handle job close
+     *
+     * @param Job $job
+     * @param resource $stream
+     * @return bool false - test execution should be stopped
+     */
+    private function processPoolJob(Job $job, $stream)
+    {
+        $job->getStream($stream)->read();
+
+        if ($job->isClosed()) {
+            $this->stopJob($job);
+            if ($job->getResult()->shouldStop()) {
+                return false;
+            }
+            $this->fillPool();
+        }
+
+        return true;
+    }
+
+    /**
+     * @param int $maxThreads
+     * @return static
+     */
+    public static function fromThreads($maxThreads)
+    {
+        return new static(
+            new JobPool($maxThreads),
+            new ResultProcessor()
+        );
+    }
+
 }

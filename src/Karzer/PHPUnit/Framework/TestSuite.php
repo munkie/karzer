@@ -22,6 +22,8 @@ class TestSuite extends \PHPUnit_Framework_TestSuite
      */
     public function __construct(\PHPUnit_Framework_Test $testSuite, JobRunner $runner)
     {
+        parent::__construct();
+
         foreach ($this->getSuiteTests($testSuite) as $test) {
             $this->addTest($test);
         }
@@ -30,23 +32,20 @@ class TestSuite extends \PHPUnit_Framework_TestSuite
     }
 
     /**
-     * @param \PHPUnit_Framework_Test $testSuite
+     * @param \PHPUnit_Framework_Test|\PHPUnit_Framework_Test[]|\Traversable $testSuite
      * @return \PHPUnit_Framework_Test[]
      */
     protected function getSuiteTests(\PHPUnit_Framework_Test $testSuite)
     {
-        if (!$testSuite instanceof \PHPUnit_Framework_TestSuite) {
+        if (!$testSuite instanceof \Traversable) {
             return [$testSuite];
         }
 
         $tests = [];
-        foreach ($testSuite->tests() as $test) {
-            if ($test instanceof \PHPUnit_Framework_TestSuite) {
-                $suiteTests = $this->getSuiteTests($test);
-                $tests = array_merge($tests, $suiteTests);
-            } else {
-                $tests[] = $test;
-            }
+
+        foreach ($testSuite as $test) {
+            $suiteTests = $this->getSuiteTests($test);
+            $tests = array_merge($tests, $suiteTests);
         }
 
         return $tests;
@@ -55,8 +54,9 @@ class TestSuite extends \PHPUnit_Framework_TestSuite
     /**
      * @param \PHPUnit_Framework_TestResult $result
      * @param string|bool $filter
-     * @param array $groups
-     * @param array $excludeGroups
+     * @param string[] $groups
+     * @param string[] $excludeGroups
+     *
      * @return \PHPUnit_Framework_TestResult
      * @throws \Karzer\Exception\RuntimeException
      */
@@ -111,7 +111,9 @@ class TestSuite extends \PHPUnit_Framework_TestSuite
     }
 
     /**
-     * @param array $groups
+     * Get tests by groups
+     *
+     * @param string[] $groups
      * @return array|\PHPUnit_Framework_Test[]
      */
     protected function getTests(array $groups = [])
@@ -177,4 +179,5 @@ class TestSuite extends \PHPUnit_Framework_TestSuite
 
         return true;
     }
+
 }
