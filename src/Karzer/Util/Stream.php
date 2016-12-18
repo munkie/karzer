@@ -46,6 +46,8 @@ class Stream
     }
 
     /**
+     * Get stream resource
+     *
      * @return resource
      */
     public function getResource()
@@ -68,7 +70,7 @@ class Stream
      * Read from stream
      *
      * @param int|null $length
-     * @return bool
+     * @return bool If failed to read from stream
      */
     public function read($length = null)
     {
@@ -89,11 +91,10 @@ class Stream
      * Write to stream
      *
      * @param string $string
-     * @return int
      */
     public function write($string)
     {
-        return fwrite($this->resource, $string);
+        fwrite($this->resource, $string);
     }
 
     /**
@@ -117,6 +118,8 @@ class Stream
     }
 
     /**
+     * Is stream open
+     *
      * @return bool
      */
     public function isOpen()

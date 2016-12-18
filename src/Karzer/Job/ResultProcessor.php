@@ -30,25 +30,32 @@ class ResultProcessor
      *
      * @see \PHPUnit_Util_PHP_Default::processChildResult()
      *
-     * @param Job $job
+     * @param \PHPUnit_Framework_Test $test
+     * @param \PHPUnit_Framework_TestResult $result
+     * @param string $stdout
+     * @param string $stderr
+     *
+     * @throws \PHPUnit_Framework_Exception
      */
-    public function processJobResult(Job $job)
-    {
+    public function processChildResult(
+        \PHPUnit_Framework_Test $test,
+        \PHPUnit_Framework_TestResult $result,
+        $stdout,
+        $stderr
+    ) {
         try {
             $this->method->invoke(
                 $this->php,
-                $job->getTest(),
-                $job->getResult(),
-                $job->getStdout()->getBuffer(),
-                $job->getStderr()->getBuffer()
+                $test,
+                $result,
+                $stdout,
+                $stderr
             );
-        } catch (\ErrorException $e) {
-            $job->addError(
-                new \PHPUnit_Framework_Exception(
-                    $job->getStdout()->getBuffer(true),
-                    0,
-                    $e
-                )
+        } catch (\ErrorException $errorException) {
+            throw new \PHPUnit_Framework_Exception(
+                trim($stdout),
+                0,
+                $errorException
             );
         }
     }

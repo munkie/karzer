@@ -2,7 +2,6 @@
 
 namespace Karzer\Job;
 
-use Karzer\Exception\ForkException;
 use Karzer\Exception\RuntimeException;
 
 class JobPool implements \IteratorAggregate, \Countable
@@ -22,7 +21,7 @@ class JobPool implements \IteratorAggregate, \Countable
     private $threads;
 
     /**
-     * @param int $size
+     * @param int $size Size of threads pool
      */
     public function __construct($size)
     {
@@ -77,6 +76,11 @@ class JobPool implements \IteratorAggregate, \Countable
         $this->startJob($job);
     }
 
+    /**
+     * Remove job from pool and add new jobs to free threads
+     *
+     * @param Job $job
+     */
     private function removeJob(Job $job)
     {
         $this->threads->remove($job);
@@ -92,7 +96,7 @@ class JobPool implements \IteratorAggregate, \Countable
     {
         try {
             $job->startTest();
-        } catch (ForkException $exception) {
+        } catch (RuntimeException $exception) {
             $job->addError($exception);
             $this->removeJob($job);
         }

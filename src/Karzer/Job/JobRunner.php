@@ -45,16 +45,17 @@ class JobRunner
     {
         $this->pool->fillPool();
 
-        $shouldStop = false;
-        while (!$shouldStop && !$this->pool->isEmpty()) {
-            $shouldStop = !$this->processPoolStreams();
+        while (!$this->pool->isEmpty()) {
+            if (!$this->processPoolStreams()) {
+                return;
+            }
         }
     }
 
     /**
      * Listen to pool streams and process jobs
      *
-     * @return bool If processing should be stopped
+     * @return bool If processing should be continued
      * @throws \Karzer\Exception\RuntimeException When failed to read streams
      */
     private function processPoolStreams()

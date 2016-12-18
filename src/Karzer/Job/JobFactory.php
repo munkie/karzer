@@ -2,7 +2,7 @@
 
 namespace Karzer\Job;
 
-use Karzer\Job\ResultProcessor;
+use Karzer\Util\Process;
 
 /**
  * Dirty hack. JobFactory is returned by monkey-patched \PHPUnit_Util_PHP::factory() method
@@ -42,7 +42,8 @@ class JobFactory
      */
     public function runTestJob($script, \PHPUnit_Framework_Test $test, \PHPUnit_Framework_TestResult $result)
     {
-        $job = new Job($script, $test, $result, $this->resultProcessor);
+        $process = Process::createPhpProcess($script);
+        $job = new Job($test, $result, $process, $this->resultProcessor);
         $this->runner->enqueueJob($job);
     }
 }

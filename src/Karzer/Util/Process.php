@@ -3,7 +3,7 @@
 namespace Karzer\Util;
 
 use Karzer\Exception\ErrorException;
-use Karzer\Exception\ForkException;
+use Karzer\Exception\RuntimeException;
 
 class Process
 {
@@ -77,7 +77,7 @@ class Process
      * @param array $customEnv
      * @return array
      */
-    private function getEnv(array $customEnv)
+    private function getEnv(array $customEnv = [])
     {
         $env = isset($_SERVER) ? $_SERVER : [];
         unset($env['argv'], $env['argc']);
@@ -95,10 +95,10 @@ class Process
     /**
      * Open process
      *
-     * @param array $env
-     * @throws ForkException
+     * @param array $customEnv Custom ENV params to pass to process
+     * @throws RuntimeException If proc_open command failed
      */
-    public function open(array $env = [])
+    public function open(array $customEnv = [])
     {
         ErrorException::setHandler();
 
@@ -112,10 +112,10 @@ class Process
                 ],
                 $pipes,
                 null,
-                $this->getEnv($env)
+                $this->getEnv($customEnv)
             );
         } catch (ErrorException $exception) {
-            throw ForkException::forkFailed($exception, $this->cmd);
+            throw RuntimeException::forkFailed($exception, $this->cmd);
         } finally {
             ErrorException::restoreHandler();
         }
@@ -126,6 +126,8 @@ class Process
     }
 
     /**
+     * Close process
+     *
      * @return int
      */
     public function close()
@@ -136,18 +138,20 @@ class Process
     /**
      * Open process and write php script to STDIN
      *
-     * @param array $env Custom ENV vars to pass to php script
+     * @param array $customEnv Custom ENV vars to pass to php script
      *
-     * @throws \Karzer\Exception\ForkException When process open failed
+     * @throws RuntimeException When process open failed
      */
-    public function start(array $env = [])
+    public function start(array $customEnv = [])
     {
-        $this->open($env);
+        $this->open($customEnv);
         $this->stdin->write($this->script);
         $this->stdin->close();
     }
 
     /**
+     * Get STDERR stream
+     *
      * @return Stream
      */
     public function getStderr()
@@ -156,6 +160,8 @@ class Process
     }
 
     /**
+     * Get STDOUT stream
+     *
      * @return Stream
      */
     public function getStdout()

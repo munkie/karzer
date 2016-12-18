@@ -14,6 +14,7 @@ class Pool implements \Countable, \IteratorAggregate
 
     /**
      * Current number of jobs in pool
+     *
      * @var int
      */
     private $count = 0;
@@ -23,7 +24,7 @@ class Pool implements \Countable, \IteratorAggregate
      *
      * @param int $size Pool size
      */
-    public function __construct($size = 0)
+    public function __construct($size)
     {
         $this->pool = new \SplFixedArray($size);
     }
@@ -50,6 +51,8 @@ class Pool implements \Countable, \IteratorAggregate
     }
 
     /**
+     * Remove item from pool
+     *
      * @param Job $job
      * @return int Index where item was stored
      *
@@ -68,6 +71,11 @@ class Pool implements \Countable, \IteratorAggregate
         throw new \RuntimeException('Pool does not contain item');
     }
 
+    /**
+     * Returns items from pool
+     *
+     * @return \Traversable
+     */
     public function getIterator()
     {
         foreach ($this->pool as $id => $item) {

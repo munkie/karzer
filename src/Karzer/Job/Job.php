@@ -2,57 +2,69 @@
 
 namespace Karzer\Job;
 
-use Karzer\Exception\ForkException;
-use Karzer\Job\ResultProcessor;
+use Karzer\Exception\RuntimeException;
 use Karzer\Util\Process;
 use Karzer\Util\Stream;
 
+/**
+ * Job for test that should be run in isolation
+ */
 class Job
 {
 
     const THREAD_ENV_TOKEN = 'TEST_TOKEN';
 
     /**
+     * Test that will run in isolation
+     *
      * @var \PHPUnit_Framework_Test
      */
     private $test;
 
     /**
+     * Test result
+     *
      * @var \PHPUnit_Framework_TestResult
      */
     private $result;
 
     /**
+     * Number of thread (starting from 0)
+     *
      * @var int
      */
     private $threadId;
 
     /**
+     * Job process
+     *
      * @var Process
      */
     private $process;
 
     /**
+     * Result processor to parse results
+     *
      * @var ResultProcessor
      */
     private $resultProcessor;
 
     /**
-     * @param string $script PHP Script to execute
      * @param \PHPUnit_Framework_Test $test Test case
      * @param \PHPUnit_Framework_TestResult $result Test result
+     * @param Process $process PHP process to run job
      * @param ResultProcessor $resultProcessor Child process result processor
      */
     public function __construct(
-        $script,
         \PHPUnit_Framework_Test $test,
         \PHPUnit_Framework_TestResult $result,
+        Process $process,
         ResultProcessor $resultProcessor
     ) {
         $this->test = $test;
         $this->result = $result;
         $this->resultProcessor = $resultProcessor;
-        $this->process = Process::createPhpProcess($script);
+        $this->process = $process;
     }
 
     /**
@@ -66,6 +78,8 @@ class Job
     }
 
     /**
+     * Get test result
+     *
      * @return \PHPUnit_Framework_TestResult
      */
     public function getResult()
@@ -74,6 +88,8 @@ class Job
     }
 
     /**
+     * Get test case
+     *
      * @return \PHPUnit_Framework_Test
      */
     public function getTest()
@@ -82,7 +98,9 @@ class Job
     }
 
     /**
-     * @throws ForkException
+     * Notify all listeners and start job process
+     *
+     * @throws RuntimeException When process start failed
      */
     public function startTest()
     {
@@ -90,49 +108,57 @@ class Job
         $this->process->start([self::THREAD_ENV_TOKEN => $this->threadId]);
     }
 
+    /**
+     * Close job process and process job results
+     */
     public function endTest()
     {
         $this->process->close();
-        $this->resultProcessor->processJobResult($this);
+
+        try {
+            $this->resultProcessor->processChildResult(
+                $this->test,
+                $this->result,
+                $this->getStdout()->getBuffer(),
+                $this->getStderr()->getBuffer()
+            );
+        } catch (\Exception $exception) {
+            $this->addError($exception);
+        }
     }
 
     /**
+     * Add error to test result
+     *
      * @param \PHPUnit_Framework_Exception|\Exception|string $error
-     * @param int $time
      */
-    public function addError($error, $time = 0)
+    public function addError($error)
     {
-        if ($error instanceof \PHPUnit_Framework_Exception) {
-            $exception = $error;
-        } elseif ($error instanceof \Exception) {
-            $exception = new \PHPUnit_Framework_Exception($error->getMessage(), 0, $error);
-        } else {
-            $exception = new \PHPUnit_Framework_Exception($error);
-        }
         $this->result->addError(
             $this->test,
-            $exception,
-            $time
+            $this->convertErrorToFrameworkException($error),
+            0
         );
     }
 
     /**
-     * @return Stream
+     * @param \PHPUnit_Framework_Exception|\Exception|string $error
+     * @return \PHPUnit_Framework_Exception
      */
-    public function getStderr()
+    private function convertErrorToFrameworkException($error)
     {
-        return $this->process->getStderr();
+        if ($error instanceof \PHPUnit_Framework_Exception) {
+            return $error;
+        }
+        if ($error instanceof \Exception) {
+            return new \PHPUnit_Framework_Exception($error->getMessage(), 0, $error);
+        }
+        return new \PHPUnit_Framework_Exception($error);
     }
 
     /**
-     * @return Stream
-     */
-    public function getStdout()
-    {
-        return $this->process->getStdout();
-    }
-
-    /**
+     * Get open read stream resources of job process, so job runner could listen for changes in them
+     *
      * @return resource[]
      */
     public function getOpenStreams()
@@ -148,6 +174,8 @@ class Job
     }
 
     /**
+     * Is stream resource is associated with one of job process read streams?
+     *
      * @param resource $resource
      * @return bool
      */
@@ -158,9 +186,11 @@ class Job
     }
 
     /**
+     * Read new bytes from given job process stream
+     *
      * @param resource $stream
      *
-     * @return bool If has open streams
+     * @return bool If job still has open streams
      */
     public function readStream($stream)
     {
@@ -169,8 +199,30 @@ class Job
     }
 
     /**
+     * Get job process STDERR
+     *
+     * @return Stream
+     */
+    private function getStderr()
+    {
+        return $this->process->getStderr();
+    }
+
+    /**
+     * Get job process STDOUT
+     *
+     * @return Stream
+     */
+    private function getStdout()
+    {
+        return $this->process->getStdout();
+    }
+
+    /**
+     * Get job read strem by resource
+     *
      * @param resource $stream
-     * @return Stream|null
+     * @return Stream|null STDOUT ot STDERR stream
      */
     private function getStream($stream)
     {
